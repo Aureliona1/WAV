@@ -1,0 +1,38 @@
+{
+	"test": {
+		"include": [
+			"test/"
+		]
+	},
+	"lint": {
+		"include": [
+			"src/",
+			"mod.ts"
+		],
+		"rules": {
+			"tags": [
+				"jsr"
+			],
+			"exclude": [
+				"no-slow-types"
+			],
+			"include": [
+				"eqeqeq"
+			]
+		}
+	},
+	"tasks": {
+		"doc": "deno doc --lint mod.ts",
+		"commit": {
+			"description": "Run pre-commit checks.",
+			"command": "deno lint && deno test --allow-all"
+		}
+	},
+	"name": "@aurellis/wav",
+	"version": "1.0.0",
+	"license": "MIT",
+	"exports": "./mod.ts",
+	"imports": {
+		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.2.4"
+	}
+}
