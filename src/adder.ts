@@ -2,7 +2,7 @@ import { type Easing, lerp, type Vec2, waveform } from "@aurellis/helpers";
 import type { WAV } from "./wav.ts";
 import { note } from "./note.ts";
 
-export class GenerateWAV {
+export class WAVAdd {
 	private addSamples(oldSamples: Float32Array, newSamples: Float32Array, offset = 0, factor = 1) {
 		offset = Math.round(offset);
 		// Make the new length array

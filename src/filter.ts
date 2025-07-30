@@ -1,7 +1,7 @@
 import { type Vec2, type Easing, lerp, mapRange, clamp, interleaveArrs } from "@aurellis/helpers";
 import type { WAV } from "./wav.ts";
 
-export class FilterWAV {
+export class WAVFilter {
 	private endTime;
 	private endSample;
 	private sampleRate;

@@ -1,98 +1,26 @@
-import { encodeWav } from "./binary/encode.ts";
-import { FilterWAV } from "./filters.ts";
-import { GenerateWAV } from "./generators.ts";
-import type { DecodeResult } from "./types.ts";
-import { decode } from "./vendor/node-wav-decode.ts";
-
-function closestFactors(num: number): [number, number] {
-	const closestPair: [number, number] = [1, num];
-
-	const sqrt = Math.floor(Math.sqrt(num));
-
-	for (let i = sqrt; i > 0; i--) {
-		if (num % i === 0) {
-			const factorPair: [number, number] = [i, num / i];
-			return factorPair;
-		}
-	}
-
-	return closestPair;
-}
+import { WAVAdd } from "./adder.ts";
+import { WAVCache } from "./cache.ts";
+import { WAVFilter } from "./filter.ts";
+import type { ChannelData, StereoType } from "./types.ts";
 
 export class WAV {
-	constructor(public sampleRate = 44100) {}
-	/**
-	 * The raw channel data of the WAV.
-	 */
-	raw: Float32Array[] = [];
-	/**
-	 * Add filters to the WAV.
-	 */
-	get filter() {
-		return new FilterWAV(this);
+	static async fromFile(path: string): Promise<WAV> {}
+	static fromCache(entryName: string): WAV {}
+	static get cache(): WAVCache {
+		return WAV._cache;
 	}
-	/**
-	 * Add filters to the WAV.
-	 */
-	set filter(_x) {
-		this.filter = new FilterWAV(this);
+	private static _cache = new WAVCache();
+	get filter(): WAVFilter {
+		return new WAVFilter(this);
 	}
-	/**
-	 * Generate sounds on the WAV.
-	 */
-	get generate() {
-		return new GenerateWAV(this);
+	get add(): WAVAdd {
+		return new WAVAdd(this);
 	}
-	/**
-	 * Generate sounds on the WAV.
-	 */
-	set generate(_x) {
-		this.generate = new GenerateWAV(this);
+	constructor(public raw: ChannelData = new Float32Array(), public sampleRate = 44100) {}
+	get length() {
+		return this.raw instanceof Float32Array ? this.raw.length / this.sampleRate : this.raw.left.length / this.sampleRate;
 	}
-	/**
-	 * Check if the wav is currently stereo.
-	 */
-	get isStereo() {
-		return this.raw[1] !== undefined;
-	}
-	/**
-	 * Read from a WAV file and import its data.
-	 * @param name The name (or relative filepath) of the WAV file.
-	 */
-	read(name: string) {
-		name = /.*\.wav$/.test(name) ? name : name + ".wav";
-
-		let input: DecodeResult = { sampleRate: 44100, channelData: [] };
-		try {
-			const file = Deno.readFileSync(name);
-			input = decode(file);
-		} catch (_) {
-			console.log("Failed to read wav file, your wav will be empty!");
-		}
-		this.sampleRate = input.sampleRate;
-		if (input.channelData[1]) {
-			this.raw = [input.channelData[0], input.channelData[1]];
-		} else {
-			this.raw[0] = input.channelData[0];
-		}
-		return this;
-	}
-	/**
-	 * Write WAV data to a WAV file.
-	 * @param name The name (or raltive filepath) of the WAV file.
-	 */
-	write(name: string) {
-		name = /.*\.wav$/.test(name) ? name : name + ".wav";
-		Deno.writeFileSync(name, encodeWav(this.raw, this.sampleRate));
-		return this;
-	}
-	/**
-	 * Cut the audio by seconds.
-	 * @param start Start of the chopped section (seconds), leave blank for start of audio.
-	 * @param end End of the chopped section (seconds), leave blank for end of audio.
-	 */
-	chop(start = 0, end?: number) {
-		this.raw = this.raw.map(x => x.slice(this.sampleRate * start, end ? this.sampleRate * end : undefined));
-		return this;
-	}
+	chop(start = 0, end = this.length): WAV {}
+	async writeFile(path: string, stereoType: StereoType): Promise<WAV> {}
+	writeCache(entryName: string): WAV {}
 }
