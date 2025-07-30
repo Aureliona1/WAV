@@ -3,7 +3,7 @@
  * @param raw The raw audio as Float32Array[]
  * @param sampleRate The sample rate of the audio
  */
-export function encodeWav(raw: Float32Array[], sampleRate = 44100): Uint8Array {
+export function encode(raw: Float32Array[], sampleRate = 44100): Uint8Array {
 	const bitDepth = 16;
 	const channels = raw.length; // 1 for mono, 2 for stereo
 	const byteRate = (sampleRate * channels * bitDepth) / 8;

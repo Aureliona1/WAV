@@ -1,7 +1,7 @@
 import { WAVAdd } from "./adder.ts";
 import { WAVCache } from "./cache.ts";
 import { WAVFilter } from "./filter.ts";
-import type { ChannelData, StereoType } from "./types.ts";
+import type { StereoType } from "./types.ts";
 
 export class WAV {
 	static async fromFile(path: string): Promise<WAV> {}
@@ -16,9 +16,9 @@ export class WAV {
 	get add(): WAVAdd {
 		return new WAVAdd(this);
 	}
-	constructor(public raw: ChannelData = new Float32Array(), public sampleRate = 44100) {}
+	constructor(public raw: Float32Array[] = [], public sampleRate = 44100) {}
 	get length() {
-		return this.raw instanceof Float32Array ? this.raw.length / this.sampleRate : this.raw.left.length / this.sampleRate;
+		return this.raw[0].length / this.sampleRate;
 	}
 	chop(start = 0, end = this.length): WAV {}
 	async writeFile(path: string, stereoType: StereoType): Promise<WAV> {}
