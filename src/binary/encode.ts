@@ -1,53 +1,79 @@
+import { ArrOp } from "@aurellis/helpers";
+import { BYTE_OFFSETS, type WAVBitDepth, type WAVFormat } from "../types.ts";
+
 /**
- * Return Uint8Array with WAV data encoded
- * @param raw The raw audio as Float32Array[]
- * @param sampleRate The sample rate of the audio
+ * Write a little-endian PCM or IEEE float to a DataView.
+ * Signedness is determined by WAV convention.
  */
-export function encode(raw: Float32Array[], sampleRate = 44100): Uint8Array {
-	const bitDepth = 16;
-	const channels = raw.length; // 1 for mono, 2 for stereo
-	const byteRate = (sampleRate * channels * bitDepth) / 8;
-	const blockAlign = (channels * bitDepth) / 8;
-	const audioDataLength = raw[0].length * channels * (bitDepth / 8);
-	const wavBuffer = new ArrayBuffer(44 + audioDataLength);
-	const view = new DataView(wavBuffer);
+const encoders: {
+	[key: string]: (view: DataView, pos: number, value: number) => void;
+} = {
+	i8: (view, pos, value) => view.setUint8(pos, value),
+	i16: (view, pos, value) => view.setInt16(pos, value, true),
+	i24: (view, pos, value) => {
+		// TODO: fix
+		// const byte1 = view.getUint8(pos);
+		// const byte2 = view.getUint8(pos + 1);
+		// const byte3 = view.getUint8(pos + 2);
+		// let val = (byte3 << 16) | (byte2 << 8) | byte1;
+		// if (val & 0x800000) val |= 0xff000000;
+		// return val;
+	},
+	i32: (view, pos, value) => view.setInt32(pos, value, true),
+	f32: (view, pos, value) => view.setFloat32(pos, value, true),
+	f64: (view, pos, value) => view.setFloat64(pos, value, true) // Pretty sure this isn't even valid in the WAV spec, but I guess it is technically possible.
+};
+
+/**
+ * Return an encode function of the specified bit depth and float.
+ * Defaults to Uint8 if depth and float are invalid.
+ */
+function getEncoder(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number, value: number) => void {
+	const key = (float ? "f" : "i") + bits;
+	return encoders[key] ?? encoders.i8;
+}
+
+/**
+ * Encode audio data into a WAV file byte-array.
+ * @param channelData The raw channel samples as float 32 values from 0-1.
+ * @param sampleRate The sample rate of the audio.
+ * @param format The format of the output (Default - 16-bit Int).
+ */
+export function encode(channelData: Float32Array[], sampleRate = 44100, format: WAVFormat = "16-bit Int"): Uint8Array {
+	const channelCount = channelData.length; // 1 for mono, 2 for stereo
+	const bitDepth = Number(format.substring(0, 2)) as WAVBitDepth;
+	const bytesPerSec = (sampleRate * channelCount * bitDepth) / 8;
+	const bytesPerBlock = (channelCount * bitDepth) / 8;
+	const audioDataLength = channelData[0].length * channelCount * (bitDepth / 8);
+	const float = format.at(-2) === "a";
+	const outputBuffer = new ArrayBuffer(44 + audioDataLength);
+	const view = new DataView(outputBuffer);
 
 	// Write the RIFF header
 	view.setUint32(0, 0x52494646, false); // "RIFF"
-	view.setUint32(4, 36 + audioDataLength, true); // Chunk size
+	view.setUint32(BYTE_OFFSETS.FILE_SIZE, 36 + audioDataLength, true);
 	view.setUint32(8, 0x57415645, false); // "WAVE"
 
 	// Write the fmt subchunk
 	view.setUint32(12, 0x666d7420, false); // "fmt "
-	view.setUint32(16, 16, true); // Subchunk1 size (16 for PCM)
-	view.setUint16(20, 1, true); // Audio format (1 for PCM)
-	view.setUint16(22, channels, true); // Number of channels (1 or 2)
-	view.setUint32(24, sampleRate, true); // Sample rate
-	view.setUint32(28, byteRate, true); // Byte rate
-	view.setUint16(32, blockAlign, true); // Block align
-	view.setUint16(34, bitDepth, true); // Bits per sample
+	view.setUint32(16, 16, true); // fmt chunk size, 16 for all cases here.
+	view.setUint16(BYTE_OFFSETS.FORMAT, float ? 3 : 1, true);
+	view.setUint16(BYTE_OFFSETS.CHANNELS, channelCount, true);
+	view.setUint32(BYTE_OFFSETS.SAMPLE_RATE, sampleRate, true); // Sample rate
+	view.setUint32(BYTE_OFFSETS.BYTES_PER_SEC, bytesPerSec, true); // Byte rate
+	view.setUint16(BYTE_OFFSETS.BYTES_PER_BLOCK, bytesPerBlock, true); // Block align
+	view.setUint16(BYTE_OFFSETS.BITS_PER_SAMPLE, bitDepth, true); // Bits per sample
 
 	// Write the data subchunk
 	view.setUint32(36, 0x64617461, false); // "data"
-	view.setUint32(40, audioDataLength, true); // Data subchunk size
+	view.setUint32(BYTE_OFFSETS.SAMPLE_LENGTH, audioDataLength, true); // Data subchunk size
 
-	// Write interleaved audio data (or mono if only one channel)
-	let offset = 44;
-	for (let i = 0; i < raw[0].length; i++) {
-		// Left or mono channel sample
-		const leftSample = Math.max(-1, Math.min(1, raw[0][i]));
-		const leftIntSample = leftSample < 0 ? leftSample * 0x8000 : leftSample * 0x7fff;
-		view.setInt16(offset, leftIntSample, true);
-		offset += 2;
-
-		// Right channel sample (if stereo)
-		if (raw[1]) {
-			const rightSample = Math.max(-1, Math.min(1, raw[1][i]));
-			const rightIntSample = rightSample < 0 ? rightSample * 0x8000 : rightSample * 0x7fff;
-			view.setInt16(offset, rightIntSample, true);
-			offset += 2;
-		}
+	// Interleave the channels.
+	const interleavedSamples = ArrOp.interleave(...channelData);
+	// Map to desired bit depth and write to buffer.
+	for (let i = 0; i < interleavedSamples.length; i++) {
+		getEncoder(float, bitDepth)(view, 44 + (i / 4) * (bitDepth / 8), interleavedSamples[i]);
 	}
 
-	return new Uint8Array(wavBuffer);
+	return new Uint8Array(outputBuffer);
 }
