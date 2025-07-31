@@ -1,10 +1,16 @@
 import { WAVAdd } from "./adder.ts";
+import { decode } from "./binary/decode.ts";
 import { WAVCache } from "./cache.ts";
 import { WAVFilter } from "./filter.ts";
 import type { StereoType } from "./types.ts";
 
 export class WAV {
-	static async fromFile(path: string): Promise<WAV> {}
+	static async fromFile(path: string): Promise<WAV> {
+		path = /.wav$/.test(path) ? path : path + ".wav";
+		const bytes = await Deno.readFile(path);
+		const dec = decode(bytes);
+		return new WAV(dec.channelData, dec.sampleRate);
+	}
 	static fromCache(entryName: string): WAV {}
 	static get cache(): WAVCache {
 		return WAV._cache;
