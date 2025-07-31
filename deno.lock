@@ -1,11 +1,15 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@aurellis/helpers@*": "1.2.5",
     "jsr:@aurellis/helpers@^1.2.5": "1.2.5"
   },
   "jsr": {
     "@aurellis/helpers@1.2.5": {
-      "integrity": "b20a116f072830d346b68dc518dfdc3b8cb22abb2cc67355342071fa7609c81e"
+      "integrity": "b20a116f072830d346b68dc518dfdc3b8cb22abb2cc67355342071fa7609c81e",
+      "dependencies": [
+        "jsr:@aurellis/helpers@^1.2.5"
+      ]
     }
   },
   "workspace": {

@@ -1,4 +1,4 @@
-import { ArrOp } from "@aurellis/helpers";
+import { ArrOp, clamp } from "@aurellis/helpers";
 import { BYTE_OFFSETS, type WAVBitDepth, type WAVFormat } from "../types.ts";
 
 /**
@@ -8,20 +8,33 @@ import { BYTE_OFFSETS, type WAVBitDepth, type WAVFormat } from "../types.ts";
 const encoders: {
 	[key: string]: (view: DataView, pos: number, value: number) => void;
 } = {
-	i8: (view, pos, value) => view.setUint8(pos, value),
-	i16: (view, pos, value) => view.setInt16(pos, value, true),
-	i24: (view, pos, value) => {
-		// TODO: fix
-		// const byte1 = view.getUint8(pos);
-		// const byte2 = view.getUint8(pos + 1);
-		// const byte3 = view.getUint8(pos + 2);
-		// let val = (byte3 << 16) | (byte2 << 8) | byte1;
-		// if (val & 0x800000) val |= 0xff000000;
-		// return val;
+	i8: (view, pos, value) => {
+		view.setUint8(pos, Math.round((clamp(value, [-1, 1]) + 1) * 127.5));
 	},
-	i32: (view, pos, value) => view.setInt32(pos, value, true),
-	f32: (view, pos, value) => view.setFloat32(pos, value, true),
-	f64: (view, pos, value) => view.setFloat64(pos, value, true) // Pretty sure this isn't even valid in the WAV spec, but I guess it is technically possible.
+
+	i16: (view, pos, value) => {
+		view.setInt16(pos, Math.round(clamp(value, [-1, 1]) * 32767), true);
+	},
+
+	i24: (view, pos, value) => {
+		const scaled = Math.round(clamp(value, [-1, 1]) * 8388607);
+		let v = scaled < 0 ? scaled + 0x1000000 : scaled;
+		view.setUint8(pos, v & 0xff);
+		view.setUint8(pos + 1, (v >> 8) & 0xff);
+		view.setUint8(pos + 2, (v >> 16) & 0xff);
+	},
+
+	i32: (view, pos, value) => {
+		view.setInt32(pos, Math.round(clamp(value, [-1, 1]) * 2147483647), true);
+	},
+
+	f32: (view, pos, value) => {
+		view.setFloat32(pos, clamp(value, [-1, 1]), true);
+	},
+
+	f64: (view, pos, value) => {
+		view.setFloat64(pos, clamp(value, [-1, 1]), true);
+	}
 };
 
 /**
