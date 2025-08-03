@@ -1,5 +1,3 @@
-import type { Vec2 } from "@aurellis/helpers";
-
 export type DecodeResult = {
 	sampleRate: number;
 	channelData: Float32Array[];
@@ -24,4 +22,13 @@ export const BYTE_OFFSETS = {
 	BITS_PER_SAMPLE: 34,
 	SAMPLE_LENGTH: 40,
 	SAMPLE_START: 44
+};
+
+export type TacDictEntry = {
+	indexOffset: number;
+	length: number;
+	sampleRate: number;
+	channels: number;
+	nameLength: number;
+	name: string;
 };

@@ -19,7 +19,9 @@ export class WAV {
 	 * Read and decode a WAV from the WAV cache.
 	 * @param entryName The name of the WAV in the cache.
 	 */
-	static fromCache(entryName: string): WAV {}
+	static fromCache(entryName: string): WAV {
+		return new WAV();
+	}
 	/**
 	 * Global WAV cache.
 	 */
@@ -64,7 +66,7 @@ export class WAV {
 	 * @param start The start of the new audio in seconds.
 	 * @param end The end of the new audio in seconds.
 	 */
-	crop(start = 0, end = this.length): WAV {
+	crop(start = 0, end = this.length): this {
 		return this;
 	}
 	/**
@@ -72,10 +74,14 @@ export class WAV {
 	 * @param path The path of the WAV file. ".wav" is optional.
 	 * @param monoType How the audio shold be transformed to mono, leave blank for stereo audio. If the audio has only 1 channel, it will be mono.
 	 */
-	async writeFile(path: string, monoType?: MonoType): Promise<WAV> {}
+	async writeFile(path: string, monoType?: MonoType): Promise<this> {
+		return this;
+	}
 	/**
 	 * Write the audio to the WAV cache.
 	 * @param entryName The name of the audio in the cache.
 	 */
-	writeCache(entryName: string): WAV {}
+	writeCache(entryName: string): this {
+		return this;
+	}
 }
