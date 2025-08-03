@@ -5,7 +5,7 @@ export type DecodeResult = {
 	channelData: Float32Array[];
 };
 
-export type StereoType = "Stereo" | "Left only" | "Right Only" | "Average LR";
+export type MonoType = "Left only" | "Right Only" | "Average LR";
 
 export type WAVBitDepth = 8 | 16 | 24 | 32;
 
