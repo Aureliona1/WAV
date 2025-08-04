@@ -1,12 +1,24 @@
+/**
+ * The result of decoding a WAV from either a file or a cache.
+ */
 export type DecodeResult = {
 	sampleRate: number;
 	channelData: Float32Array[];
 };
 
+/**
+ * A valid method for converting stereo (or multi-channel audio) to mono.
+ */
 export type MonoType = "Left only" | "Right Only" | "Average LR";
 
+/**
+ * Supported bit-depth for WAV files.
+ */
 export type WAVBitDepth = 8 | 16 | 24 | 32;
 
+/**
+ * Supported byte encoding format for WAV files.
+ */
 export type WAVFormat = `${WAVBitDepth}-bit Int` | "32-bit Float";
 
 /**
@@ -24,6 +36,9 @@ export const BYTE_OFFSETS = {
 	SAMPLE_START: 44
 };
 
+/**
+ * The format of a TAC dictionary entry.
+ */
 export type TacDictEntry = {
 	indexOffset: number;
 	sampleCount: number;

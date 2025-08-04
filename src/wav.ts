@@ -6,6 +6,9 @@ import { WAVCache } from "./cache.ts";
 import { WAVFilter } from "./filter.ts";
 import type { MonoType, WAVFormat } from "./types.ts";
 
+/**
+ * A utility class for manipulating WAV audio files.
+ */
 export class WAV {
 	/**
 	 * Read and decode a WAV file.
