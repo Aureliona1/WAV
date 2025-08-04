@@ -22,7 +22,8 @@ export class WAV {
 	 * @param entryName The name of the WAV in the cache.
 	 */
 	static fromCache(entryName: string): WAV {
-		return new WAV();
+		const dec = WAV.cache.read(entryName);
+		return new WAV(dec.channelData, dec.sampleRate);
 	}
 	/**
 	 * Global WAV cache.
@@ -102,6 +103,7 @@ export class WAV {
 	 * @param entryName The name of the audio in the cache.
 	 */
 	writeCache(entryName: string): this {
+		WAV.cache.write(entryName, this);
 		return this;
 	}
 }
