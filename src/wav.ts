@@ -1,4 +1,4 @@
-import { lerp } from "@aurellis/helpers";
+import { clog, lerp } from "@aurellis/helpers";
 import { WAVAdd } from "./adder.ts";
 import { decode } from "./binary/decode.ts";
 import { encode } from "./binary/encode.ts";
@@ -57,12 +57,16 @@ export class WAV {
 		return this.raw[0].length / this.sampleRate;
 	}
 	/**
-	 * Check if the samples are valid. This means:
-	 * - All channels have the same number of samples.
-	 * - All samples are in the valid range (-1 to 1 inclusive).
+	 * Check if all channels have the same number of samples.
 	 */
 	get hasValidSampleCount(): boolean {
-		return this.raw.every((c, _, a) => c.length === a[0].length && c.every(x => x >= 1 && x <= 1));
+		return this.raw.every((c, _, a) => c.length === a[0].length);
+	}
+	/**
+	 * Check if all channels have valid sample ranges (-1 to 1 inclusive).
+	 */
+	get hasValidSampleRange(): boolean {
+		return this.raw.every(c => c.every(x => x >= 1 && x <= 1));
 	}
 	/**
 	 * Crop the audio from a start and end point.
@@ -70,6 +74,23 @@ export class WAV {
 	 * @param end The end of the new audio in seconds.
 	 */
 	crop(start = 0, end = this.length): this {
+		if (!this.hasValidSampleCount) {
+			clog("Channels do not have a valid sample count, audio will not be cropped...", "Warning", "WAV");
+			return this;
+		}
+		const startIndex = start * this.sampleRate;
+		const endIndex = end * this.sampleRate;
+		this.raw = this.raw.map(x => x.subarray(startIndex, endIndex));
+		return this;
+	}
+	/**
+	 * Resample the audio to a new sample rate.
+	 * @param rate The new sample rate of the audio.
+	 */
+	resample(rate: number): this {
+		const ratio = rate / this.sampleRate;
+		this.raw = this.raw.map((x, i) => new Float32Array(Math.floor(x.length * ratio)).map((_, j) => this.raw[i][Math.floor(j / ratio)]));
+		this.sampleRate = rate;
 		return this;
 	}
 	/**
