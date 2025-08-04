@@ -26,9 +26,9 @@ export const BYTE_OFFSETS = {
 
 export type TacDictEntry = {
 	indexOffset: number;
-	length: number;
+	sampleCount: number;
 	sampleRate: number;
-	channels: number;
+	channelCount: number;
 	nameLength: number;
 	name: string;
 };

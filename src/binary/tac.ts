@@ -1,6 +1,6 @@
 import { clog, concatTypedArray } from "@aurellis/helpers";
 import type { DecodeResult, TacDictEntry } from "../types.ts";
-import { WAV } from "../wav.ts";
+import type { WAV } from "../wav.ts";
 
 /**
 Terrible Audio Cache
@@ -17,12 +17,12 @@ dict entry[]
 dict entry:
 	indexStart: Uint32
 	sampleRate: Uint32
-	length: Uint32
+	sampleCount: Uint32 <- single channel
 	channelCount: Uint16
 	nameLength: Uint8
 	name: Uint8Array up to 255 length
 
-The end of each sample's section in the datachunk will be calculated as indexStart + length * sampleRate * channelCount.
+The end of each sample's section in the datachunk will be calculated as indexStart + sampleCount * channelCount.
 
 Each dictionary entry takes 15 + nameLength bytes.
 
@@ -30,33 +30,42 @@ datachunk: Float32Array
 */
 export class TAC {
 	/**
+	 * Base length of a dict entry with a 0-length name.
+	 */
+	private static DICT_ENTRY_BASE_LENGTH = 15;
+	/**
+	 * Maximum name length supported by the dict.
+	 */
+	private static DICT_NAME_MAX_LENGTH = 256;
+	/**
 	 * Get the length of an entry in the datachunk.
 	 */
 	private static entryDataLength(entry: TacDictEntry) {
-		return entry.length * entry.sampleRate * entry.channels;
+		return entry.sampleCount * entry.channelCount;
 	}
 
 	/**
 	 * Decode a binary TAC file.
 	 * @param raw The raw TAC binary.
-	 * @returns Decoded tac data.
+	 * @returns Decoded TAC data.
 	 */
 	static from(raw: Uint8Array): TAC {
 		const view = new DataView(raw.buffer);
 		const dictLength = raw.length >= 4 ? view.getUint32(0) : 0;
-		const output = new TAC(dictLength, new Map(), raw.subarray(dictLength + 4));
+		const dataChunk = new Float32Array(raw.buffer, raw.byteOffset + dictLength + 4, (raw.length - dictLength - 4) / 4);
+		const output = new TAC(dictLength, new Map(), dataChunk);
 
 		try {
 			for (let cursor = 4; cursor < dictLength + 4; ) {
 				const thisEntry: Partial<TacDictEntry> = {};
 				thisEntry.indexOffset = view.getUint32(cursor);
 				cursor += 4;
-				thisEntry.width = view.getUint32(cursor);
+				thisEntry.sampleRate = view.getUint32(cursor);
 				cursor += 4;
-				thisEntry.height = view.getUint32(cursor);
+				thisEntry.sampleCount = view.getUint32(cursor);
 				cursor += 4;
-				thisEntry.colorFormat = tacColorFormats.revGet(((view.getUint8(cursor) >> 6) + 1) as 1 | 2 | 3 | 4);
-				thisEntry.bitDepth = (1 << ((view.getUint8(cursor++) >> 4) & 3)) as BitDepth;
+				thisEntry.channelCount = view.getUint16(cursor);
+				cursor += 2;
 				thisEntry.nameLength = view.getUint8(cursor++);
 				thisEntry.name = new TextDecoder().decode(raw.subarray(cursor, cursor + thisEntry.nameLength));
 				cursor += thisEntry.nameLength;
@@ -69,9 +78,9 @@ export class TAC {
 	}
 
 	/**
-	 * An interface to TAC cache files. Never construct this class by itself. Use the {@link PNG.cache} member on PNG.
+	 * An interface to TAC cache files. Never construct this class by itself. Use the {@link WAV.cache} member on WAV.
 	 */
-	constructor(public dictLength = 0, public dict: Map<string, TacDictEntry> = new Map(), public dataChunk: Uint8Array = new Uint8Array()) {}
+	constructor(public dictLength = 0, public dict: Map<string, TacDictEntry> = new Map(), public dataChunk: Float32Array = new Float32Array()) {}
 	/**
 	 * Validates TAC dictionary values, and makes corrections when needed and possible.
 	 *
@@ -81,35 +90,34 @@ export class TAC {
 	 * - All name length values match encoded name length.
 	 * - Dict length is correct.
 	 * - Byte offset values are within the limits of the datachunk
-	 * - Image data doesn't extend the length of the datachunk
+	 * - Audio data doesn't extend the length of the datachunk
 	 */
 	validate(alreadyValidated = false) {
 		let dictLength = 0;
-		// [name, size in dict, size in datachunk]
 		const invalidEntries: string[] = [];
 		this.dict.forEach(entry => {
 			let valid = true;
 			// Base entry length
-			dictLength += 14;
+			dictLength += TAC.DICT_ENTRY_BASE_LENGTH;
 
 			// Validate name length
 			const encodedName = new TextEncoder().encode(entry.name);
 			entry.nameLength = encodedName.length;
-			if (entry.nameLength > 256) {
-				clog(`The image name ${entry.name} exceeds the maximum length (256), it will be shortened...`, "Warning", "TIC");
-				entry.name = new TextDecoder().decode(encodedName.slice(0, 256));
-				clog(`The image has been renamed to ${entry.name}...`, "Log", "TIC");
-				entry.nameLength = 256;
+			if (entry.nameLength > TAC.DICT_NAME_MAX_LENGTH) {
+				clog(`The audio name ${entry.name} exceeds the maximum length (${TAC.DICT_NAME_MAX_LENGTH}), it will be shortened...`, "Warning", "TAC");
+				entry.name = new TextDecoder().decode(encodedName.slice(0, TAC.DICT_NAME_MAX_LENGTH));
+				clog(`The audio has been renamed to ${entry.name}...`, "Log", "TAC");
+				entry.nameLength = TAC.DICT_NAME_MAX_LENGTH;
 			}
 			dictLength += entry.nameLength;
 
 			const dataLength = TAC.entryDataLength(entry);
 			if (entry.indexOffset >= this.dataChunk.length) {
-				clog(`Cached image ${entry.name} has an invalid byte offset, it will be removed form the cache...`, "Warning", "TIC");
+				clog(`Cached audio ${entry.name} has an invalid index offset, it will be removed form the cache...`, "Warning", "TAC");
 				valid = false;
 			}
 			if (entry.indexOffset + dataLength > this.dataChunk.length) {
-				clog(`Cached image ${entry.name} has invalid data length, it will be removed from the cache...`, "Warning", "TIC");
+				clog(`Cached audio ${entry.name} has invalid data length, it will be removed from the cache...`, "Warning", "TAC");
 				valid = false;
 			}
 			if (!valid) {
@@ -133,7 +141,7 @@ export class TAC {
 		if (this.dict.has(entryName)) {
 			const entry = this.dict.get(entryName)!;
 			const nameLength = new TextEncoder().encode(entry.name).length;
-			this.dictLength -= 14 + nameLength;
+			this.dictLength -= TAC.DICT_ENTRY_BASE_LENGTH + nameLength;
 			const dataLength = TAC.entryDataLength(entry);
 			this.dataChunk = concatTypedArray(this.dataChunk.subarray(0, entry.indexOffset), this.dataChunk.subarray(entry.indexOffset + dataLength));
 			this.dict.forEach(e => {
