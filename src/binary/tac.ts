@@ -157,41 +157,27 @@ export class TAC {
 	/**
 	 * Add an entry to the TAC. Or overwrite an existing entry.
 	 * @param entryName The name of the entry, this must be 255 characters or less in ASCII.
-	 * @param wav The image to add.
-	 * @param bitDepth The desired bit depth of the image, lower values reduce quality and file size.
+	 * @param wav The audio to add.
 	 */
 	writeEntry(entryName: string, wav: WAV) {
+		if (!wav.hasValidSampleCount) {
+			clog(`The audio ${entryName} does not have a valid sample count, it will not be written to the cache...`, "Warning", "TAC");
+			return;
+		}
 		if (this.dict.has(entryName)) {
 			this.dict.delete(entryName);
 		}
-		const formatter = new PNGFormatterTo(wav);
-		if (!formatter.canBeRGBA()) clog(`The image to be cached as ${entryName} is not valid RGBA. Expected raw length of ${wav.width * wav.height * 4}, got ${wav.raw.length}...`, "Warning", "TIC");
-		let colorFormat: TicColorFormat = "GrayScale";
-		let encodedRaw: Uint8Array = wav.raw;
-		if (formatter.canBeGrayScale()) {
-			encodedRaw = formatter.toGrayScale();
-		} else if (formatter.canBeGrayScaleAlpha()) {
-			encodedRaw = formatter.toGrayScaleAlpha();
-			colorFormat = "GrayScaleAlpha";
-		} else if (formatter.canBeRGB()) {
-			encodedRaw = formatter.toRGB();
-			colorFormat = "RGB";
-		} else {
-			colorFormat = "RGBA";
-		}
-		encodedRaw = packBits(encodedRaw, wav.width, bitDepth);
 		const thisEntry: TacDictEntry = {
+			sampleCount: (wav.raw[0] ?? new Float32Array()).length,
+			channelCount: wav.raw.length,
+			sampleRate: wav.sampleRate,
 			indexOffset: this.dataChunk.length,
-			width: wav.width,
-			height: wav.height,
-			colorFormat: colorFormat,
-			bitDepth: bitDepth,
 			nameLength: new TextEncoder().encode(entryName).length,
 			name: entryName
 		};
 		this.dictLength += TAC.DICT_ENTRY_BASE_LENGTH + thisEntry.nameLength;
 		this.dict.set(entryName, thisEntry);
-		this.dataChunk = concatTypedArray(this.dataChunk, encodedRaw);
+		this.dataChunk = concatTypedArray(this.dataChunk, ...wav.raw);
 	}
 
 	/**
@@ -200,17 +186,13 @@ export class TAC {
 	 */
 	readEntry(entryName = ""): DecodeResult {
 		if (!this.dict.has(entryName)) {
-			return { raw: new Uint8Array(), width: 0, height: 0, colorFormat: "RGBA", bitDepth: 8 };
+			return { sampleRate: 44100, channelData: [] };
 		}
 		const entry = this.dict.get(entryName)!;
 		const dec: DecodeResult = {
-			raw: this.dataChunk.subarray(entry.indexOffset, entry.indexOffset + TAC.entryDataLength(entry)),
-			width: entry.width,
-			height: entry.height,
-			colorFormat: entry.colorFormat,
-			bitDepth: entry.bitDepth
+			sampleRate: entry.sampleRate,
+			channelData: new Array(entry.channelCount).fill(new Float32Array()).map((_, i) => this.dataChunk.subarray(entry.indexOffset + i * entry.sampleCount, entry.indexOffset + (i + 1) * entry.sampleCount))
 		};
-
 		return dec;
 	}
 
@@ -222,7 +204,7 @@ export class TAC {
 		this.validate();
 
 		// Create output buffers.
-		const buffer = new ArrayBuffer(this.dictLength + this.dataChunk.length + 4);
+		const buffer = new ArrayBuffer(this.dictLength + this.dataChunk.byteLength + 4);
 		const view = new DataView(buffer);
 
 		// Encode dict entries.
@@ -231,12 +213,13 @@ export class TAC {
 		this.dict.forEach(x => {
 			view.setUint32(cursor, x.indexOffset);
 			cursor += 4;
-			view.setUint32(cursor, x.width);
+			view.setUint32(cursor, x.sampleRate);
 			cursor += 4;
-			view.setUint32(cursor, x.height);
+			view.setUint32(cursor, x.sampleCount);
 			cursor += 4;
-			view.setUint8(cursor++, ((ticColorFormats.get(x.colorFormat) - 1) << 6) + (Math.log2(x.bitDepth) << 4));
-			view.setUint8(cursor++, x.nameLength);
+			view.setUint16(cursor, x.channelCount);
+			cursor += 2;
+			view.setUint8(cursor, x.nameLength);
 			const encodedString = new TextEncoder().encode(x.name);
 			for (let i = 0; i < encodedString.length; i++) {
 				view.setUint8(cursor++, encodedString[i]);
