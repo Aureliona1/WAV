@@ -189,7 +189,7 @@ export class TAC {
 			nameLength: new TextEncoder().encode(entryName).length,
 			name: entryName
 		};
-		this.dictLength += 14 + thisEntry.nameLength;
+		this.dictLength += TAC.DICT_ENTRY_BASE_LENGTH + thisEntry.nameLength;
 		this.dict.set(entryName, thisEntry);
 		this.dataChunk = concatTypedArray(this.dataChunk, encodedRaw);
 	}
