@@ -53,8 +53,8 @@ function getEncoder(float: boolean, bits: WAVBitDepth): (view: DataView, pos: nu
  * @param format The format of the output (Default - 16-bit Int).
  */
 export function encode(channelData: Float32Array[], sampleRate = 44100, format: WAVFormat = "16-bit Int"): Uint8Array {
-	const channelCount = channelData.length; // 1 for mono, 2 for stereo
-	const bitDepth = Number(format.substring(0, 2)) as WAVBitDepth;
+	const channelCount = channelData.length;
+	const bitDepth = (Number(format.substring(0, 2)) as WAVBitDepth) || 8;
 	const bytesPerSec = (sampleRate * channelCount * bitDepth) / 8;
 	const bytesPerBlock = (channelCount * bitDepth) / 8;
 	const audioDataLength = channelData[0].length * channelCount * (bitDepth / 8);
@@ -69,7 +69,7 @@ export function encode(channelData: Float32Array[], sampleRate = 44100, format: 
 
 	// Write the fmt subchunk
 	view.setUint32(12, 0x666d7420, false); // "fmt "
-	view.setUint32(16, 16, true); // fmt chunk size, 16 for all cases here.
+	view.setUint32(16, 16, true);
 	view.setUint16(BYTE_OFFSETS.FORMAT, float ? 3 : 1, true);
 	view.setUint16(BYTE_OFFSETS.CHANNELS, channelCount, true);
 	view.setUint32(BYTE_OFFSETS.SAMPLE_RATE, sampleRate, true); // Sample rate
@@ -79,11 +79,8 @@ export function encode(channelData: Float32Array[], sampleRate = 44100, format: 
 
 	// Write the data subchunk
 	view.setUint32(36, 0x64617461, false); // "data"
-	view.setUint32(BYTE_OFFSETS.SAMPLE_LENGTH, audioDataLength, true); // Data subchunk size
-
-	// Interleave the channels.
+	view.setUint32(BYTE_OFFSETS.DATA_LENGTH, audioDataLength, true);
 	const interleavedSamples = ArrOp.interleave(...channelData);
-	// Map to desired bit depth and write to buffer.
 	for (let i = 0; i < interleavedSamples.length; i++) {
 		getEncoder(float, bitDepth)(view, 44 + (i / 4) * (bitDepth / 8), interleavedSamples[i]);
 	}
