@@ -1,8 +1,10 @@
+import { lerp } from "@aurellis/helpers";
 import { WAVAdd } from "./adder.ts";
 import { decode } from "./binary/decode.ts";
+import { encode } from "./binary/encode.ts";
 import { WAVCache } from "./cache.ts";
 import { WAVFilter } from "./filter.ts";
-import type { MonoType } from "./types.ts";
+import type { MonoType, WAVFormat } from "./types.ts";
 
 export class WAV {
 	/**
@@ -10,7 +12,7 @@ export class WAV {
 	 * @param path The path to the WAV file, ".wav" is optional and will be added if absent.
 	 */
 	static async fromFile(path: string): Promise<WAV> {
-		path = /.wav$/.test(path) ? path : path + ".wav";
+		path = /.*\.wav$/.test(path) ? path : path + ".wav";
 		const bytes = await Deno.readFile(path);
 		const dec = decode(bytes);
 		return new WAV(dec.channelData, dec.sampleRate);
@@ -72,9 +74,27 @@ export class WAV {
 	/**
 	 * Write the audio to a WAV file.
 	 * @param path The path of the WAV file. ".wav" is optional.
+	 * @param sampleFormat The bit depth and numbr format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Defualt - 16-bit Int)
 	 * @param monoType How the audio shold be transformed to mono, leave blank for stereo audio. If the audio has only 1 channel, it will be mono.
 	 */
-	async writeFile(path: string, monoType?: MonoType): Promise<this> {
+	async writeFile(path: string, sampleFormat: WAVFormat = "16-bit Int", monoType?: MonoType): Promise<this> {
+		path = /.*\.wav$/.test(path) ? path : path + ".wav";
+		let outputChannels = this.hasValidSampleCount ? this.raw : [new Float32Array()];
+		if (monoType && outputChannels.length > 1) {
+			switch (monoType) {
+				case "Left only":
+					outputChannels = [outputChannels[0]];
+				case "Right Only":
+					outputChannels = [outputChannels[1]];
+				case "Average LR":
+					const newChannel = new Float32Array(outputChannels[0].length);
+					for (let i = 0; i < newChannel.length; i++) {
+						newChannel[i] = lerp(outputChannels[0][i], outputChannels[1][i], 0.5);
+					}
+					outputChannels = [newChannel];
+			}
+		}
+		await Deno.writeFile(path, encode(outputChannels, this.sampleRate, sampleFormat));
 		return this;
 	}
 	/**
