@@ -1,4 +1,4 @@
-import { ArrOp, clamp } from "@aurellis/helpers";
+import { ArrOp, clamp, mapRange } from "@aurellis/helpers";
 import { BYTE_OFFSETS, type WAVBitDepth, type WAVFormat } from "../types.ts";
 
 /**
@@ -9,15 +9,15 @@ const encoders: {
 	[key: string]: (view: DataView, pos: number, value: number) => void;
 } = {
 	i8: (view, pos, value) => {
-		view.setUint8(pos, Math.round((clamp(value, [-1, 1]) + 1) * 127.5));
+		view.setUint8(pos, mapRange(clamp(value, [-1, 1]), [-1, 1], [0, (1 << 8) - 1], 0));
 	},
 
 	i16: (view, pos, value) => {
-		view.setInt16(pos, Math.round(clamp(value, [-1, 1]) * 32767), true);
+		view.setInt16(pos, mapRange(clamp(value, [-1, 1]), [-1, 1], [-(1 << 15), (1 << 15) - 1], 0), true);
 	},
 
 	i24: (view, pos, value) => {
-		const scaled = Math.round(clamp(value, [-1, 1]) * 8388607);
+		const scaled = mapRange(clamp(value, [-1, 1]), [-1, 1], [-(1 << 23), (1 << 23) - 1]);
 		let v = scaled < 0 ? scaled + 0x1000000 : scaled;
 		view.setUint8(pos, v & 0xff);
 		view.setUint8(pos + 1, (v >> 8) & 0xff);
@@ -25,7 +25,7 @@ const encoders: {
 	},
 
 	i32: (view, pos, value) => {
-		view.setInt32(pos, Math.round(clamp(value, [-1, 1]) * 2147483647), true);
+		view.setInt32(pos, mapRange(clamp(value, [-1, 1]), [-1, 1], [-(1 << 31), (1 << 31) - 1]), true);
 	},
 
 	f32: (view, pos, value) => {
@@ -82,7 +82,7 @@ export function encode(channelData: Float32Array[], sampleRate = 44100, format: 
 	view.setUint32(BYTE_OFFSETS.DATA_LENGTH, audioDataLength, true);
 	const interleavedSamples = ArrOp.interleave(...channelData);
 	for (let i = 0; i < interleavedSamples.length; i++) {
-		getEncoder(float, bitDepth)(view, 44 + (i / 4) * (bitDepth / 8), interleavedSamples[i]);
+		getEncoder(float, bitDepth)(view, 44 + i * (bitDepth / 8), interleavedSamples[i]);
 	}
 
 	return new Uint8Array(outputBuffer);

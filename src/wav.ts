@@ -69,7 +69,7 @@ export class WAV {
 	 * Check if all channels have valid sample ranges (-1 to 1 inclusive).
 	 */
 	get hasValidSampleRange(): boolean {
-		return this.raw.every(c => c.every(x => x >= 1 && x <= 1));
+		return this.raw.every(c => c.every(x => x >= -1 && x <= 1));
 	}
 	/**
 	 * Crop the audio from a start and end point.
@@ -102,21 +102,24 @@ export class WAV {
 	 * @param sampleFormat The bit depth and numbr format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Defualt - 16-bit Int)
 	 * @param monoType How the audio shold be transformed to mono, leave blank for stereo audio. If the audio has only 1 channel, it will be mono.
 	 */
-	async writeFile(path: string, sampleFormat: WAVFormat = "16-bit Int", monoType?: MonoType): Promise<this> {
+	async writeFile(path: string = "wav", sampleFormat: WAVFormat = "16-bit Int", monoType?: MonoType): Promise<this> {
 		path = /.*\.wav$/.test(path) ? path : path + ".wav";
 		let outputChannels = this.hasValidSampleCount ? this.raw : [new Float32Array()];
 		if (monoType && outputChannels.length > 1) {
 			switch (monoType) {
 				case "Left only":
 					outputChannels = [outputChannels[0]];
+					break;
 				case "Right Only":
 					outputChannels = [outputChannels[1]];
+					break;
 				case "Average LR":
 					const newChannel = new Float32Array(outputChannels[0].length);
 					for (let i = 0; i < newChannel.length; i++) {
 						newChannel[i] = lerp(outputChannels[0][i], outputChannels[1][i], 0.5);
 					}
 					outputChannels = [newChannel];
+					break;
 			}
 		}
 		await Deno.writeFile(path, encode(outputChannels, this.sampleRate, sampleFormat));
