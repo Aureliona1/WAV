@@ -3,30 +3,6 @@ import { note } from "./note.ts";
 import type { WAV } from "./wav.ts";
 
 export class WAVAdd {
-	/**
-	 * Add samples to a sample array.
-	 * @param oldSamples The original samples to add to.
-	 * @param newSamples The new samples to add.
-	 * @param offset The offset to begin adding samples at.
-	 * @param factor The lerp factor of the new samples over the old ones.
-	 */
-	private static addSamples(oldSamples: Float32Array, newSamples: Float32Array, offset = 0, factor = 1): Float32Array {
-		offset = Math.round(offset);
-		// Make the new length array
-		const temp = new Float32Array(Math.max(oldSamples.length, newSamples.length + offset));
-		// First fill as many old samples as there are.
-		temp.set(oldSamples);
-		// Then overwrite the samples (or add new ones).
-		if (factor === 1) {
-			temp.set(newSamples, offset);
-		} else if (factor !== 0) {
-			for (let i = offset; i < newSamples.length + offset; i++) {
-				temp[i] = lerp(temp[i] ?? newSamples[i - offset], newSamples[i - offset], factor);
-			}
-		}
-		return temp;
-	}
-
 	constructor(private src: WAV) {}
 	/**
 	 * Add silence to the WAV, will also extend the length of the audio if end is beyond the end of any existing audio.
@@ -38,14 +14,9 @@ export class WAVAdd {
 		// Get sample points
 		start *= this.src.sampleRate;
 		end *= this.src.sampleRate;
-		if (typeof channels === "number") {
-			channels = [channels];
-		}
+		// Add samples
 		const samples = new Float32Array(end - start);
-		for (let i = 0; i < channels.length; i++) {
-			this.src.raw[i] = WAVAdd.addSamples(this.src.raw[i] ?? new Float32Array(), samples, start);
-		}
-
+		this.src.setSamples(samples, start / this.src.sampleRate, channels);
 		return this.src;
 	}
 
@@ -70,12 +41,7 @@ export class WAVAdd {
 					return sample;
 				})
 		);
-		if (typeof channels === "number") {
-			channels = [channels];
-		}
-		for (let i = 0; i < channels.length; i++) {
-			this.src.raw[i] = WAVAdd.addSamples(this.src.raw[i] ?? new Float32Array(), samples, time[0] * sampleRate, factor);
-		}
+		this.src.setSamples(samples, time[0], channels, factor);
 		return this.src;
 	}
 	/**
@@ -88,9 +54,8 @@ export class WAVAdd {
 		// Resample new audio to src sampleRate
 		sound.resample(this.src.sampleRate);
 		const audioSampleLength = sound.length * this.src.sampleRate;
-		const silence = new Float32Array(audioSampleLength);
 		for (let i = 0; i < Math.max(sound.raw.length, this.src.raw.length); i++) {
-			this.src.raw[i] = WAVAdd.addSamples(this.src.raw[i] ?? new Float32Array(), sound.raw[i] ?? silence, offset * this.src.sampleRate, factor);
+			this.src.setSamples(sound.raw[i] ?? new Float32Array(), offset, factor);
 		}
 		return this.src;
 	}

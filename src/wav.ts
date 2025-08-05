@@ -1,4 +1,4 @@
-import { clog, lerp } from "@aurellis/helpers";
+import { arrFromFunction, clamp, clog, concatTypedArray, lerp } from "@aurellis/helpers";
 import { WAVAdd } from "./adder.ts";
 import { decode } from "./binary/decode.ts";
 import { encode } from "./binary/encode.ts";
@@ -97,6 +97,40 @@ export class WAV {
 		return this;
 	}
 	/**
+	 * Add samples to the audio in the form of sample arrays (Float32Array).
+	 * @param samples The samples to add.
+	 * @param offset The offset (in seconds) to start the samples from.
+	 * @param channels The channel/s to add the samples to.
+	 * @param factor The factor to interpolate the new samples with the old ones (Default - 1).
+	 */
+	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), factor = 1): this {
+		offset *= this.sampleRate;
+		if (typeof channels === "number") {
+			channels = [channels];
+		}
+		factor = clamp(factor, [0, 1]);
+		for (let i = 0; i < channels.length; i++) {
+			const channel = channels[i];
+			this.raw[channel] ??= new Float32Array();
+			const newSamples = new Float32Array(Math.max(this.raw[channel].length, samples.length + offset));
+			newSamples.set(this.raw[channel]);
+			switch (factor) {
+				case 1:
+					newSamples.set(samples, offset);
+					break;
+				case 0:
+					break;
+				default:
+					for (let j = offset; j < newSamples.length; j++) {
+						newSamples[j] = lerp(newSamples[j], samples[j - offset], factor);
+					}
+					break;
+			}
+			this.raw[channel] = newSamples;
+		}
+		return this;
+	}
+	/**
 	 * Write the audio to a WAV file.
 	 * @param path The path of the WAV file. ".wav" is optional.
 	 * @param sampleFormat The bit depth and numbr format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Defualt - 16-bit Int)
@@ -104,7 +138,13 @@ export class WAV {
 	 */
 	async writeFile(path: string = "wav", sampleFormat: WAVFormat = "16-bit Int", monoType?: MonoType): Promise<this> {
 		path = /.*\.wav$/.test(path) ? path : path + ".wav";
-		let outputChannels = this.hasValidSampleCount ? this.raw : [new Float32Array()];
+		let outputChannels = this.raw;
+		if (!this.hasValidSampleCount) {
+			const padTo = Math.max(...this.raw.map(x => x.length));
+			for (let i = 0; i < this.raw.length; i++) {
+				this.raw[i] = concatTypedArray(this.raw[i], new Float32Array(padTo - this.raw[i].length));
+			}
+		}
 		if (monoType && outputChannels.length > 1) {
 			switch (monoType) {
 				case "Left only":
