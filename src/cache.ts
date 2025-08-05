@@ -7,6 +7,9 @@ import type { WAV } from "./wav.ts";
  * Abstract wrapper for TAC cache files, this class should only be constructed for a single unique TAC file.
  */
 export class WAVCache {
+	/**
+	 * Read the cache file and update in-memory.
+	 */
 	private readFile() {
 		if (pathCanBeAccessed(this.fileName)) {
 			try {

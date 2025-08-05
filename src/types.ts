@@ -48,3 +48,8 @@ export type TacDictEntry = {
 	nameLength: number;
 	name: string;
 };
+
+/**
+ * A function that transforms a time value into a point on a waveform.
+ */
+export type Waveform = (x: number) => number;

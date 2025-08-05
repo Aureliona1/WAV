@@ -22,7 +22,7 @@
 		}
 	},
 	"tasks": {
-		"doc": "deno doc --lint mod.ts",
+		"doc": "deno doc --lint src/",
 		"commit": {
 			"description": "Run pre-commit checks.",
 			"command": "deno lint && deno test --allow-all"

@@ -2,7 +2,13 @@ import { arrFromFunction, type Easing, lerp, type Vec2, waveform } from "@aurell
 import { note } from "./note.ts";
 import type { WAV } from "./wav.ts";
 
+/**
+ * A utility class with many functions that add samples or sounds to a WAV. Do not construct this class by itself, use {@link WAV.add}.
+ */
 export class WAVAdd {
+	/**
+	 * A utility class with many functions that add samples or sounds to a WAV. Do not construct this class by itself, use {@link WAV.add}.
+	 */
 	constructor(private src: WAV) {}
 	/**
 	 * Add silence to the WAV, will also extend the length of the audio if end is beyond the end of any existing audio.

@@ -40,7 +40,7 @@ export class TAC {
 	/**
 	 * Get the length of an entry in the datachunk.
 	 */
-	private static entryDataLength(entry: TacDictEntry) {
+	private static entryDataLength(entry: TacDictEntry): number {
 		return entry.sampleCount * entry.channelCount;
 	}
 

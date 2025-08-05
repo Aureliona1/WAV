@@ -1,7 +1,13 @@
 import { arrFromFunction, clamp, concatTypedArray, type Easing, lerp, mapRange, type Vec2 } from "@aurellis/helpers";
 import type { WAV } from "./wav.ts";
 
+/**
+ * A utility class that provides a number of filters to operate on a WAV. Do not construct this by itself, use {@link WAV.filter}.
+ */
 export class WAVFilter {
+	/**
+	 * A utility class that provides a number of filters to operate on a WAV. Do not construct this by itself, use {@link WAV.filter}.
+	 */
 	constructor(private src: WAV) {}
 	/**
 	 * Scale the waveform amplitude by a factor (0-1).
@@ -59,7 +65,7 @@ export class WAVFilter {
 	 * @param channels The channels to apply the filter to.
 	 * @param thresh The minimum volume of a sample to add delay to.
 	 */
-	delay(timeOffset = 0.1, decay = 0.5, channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x), thresh = Math.pow(10, -3)): this {
+	delay(timeOffset = 0.1, decay = 0.5, channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x), thresh = 0.001): this {
 		thresh = clamp(thresh, [0, 1]);
 		if (typeof channels === "number") {
 			channels = [channels];
