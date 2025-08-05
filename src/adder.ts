@@ -49,13 +49,13 @@ export class WAVAdd {
 	 * @param sound The other wav to add on top.
 	 * @param offset The offset in seconds.
 	 * @param factor The volume factor (0-1) for interpolating over the existing audio.
+	 * @param attackLength The amount of time to gradually bring in the new sample. This prevents pops at the beginning of new samples. (Default - 0.001).
 	 */
-	sample(sound: WAV, offset = 0, factor = 1) {
+	sample(sound: WAV, offset = 0, factor = 0.5, attackLength = 0.001): WAV {
 		// Resample new audio to src sampleRate
 		sound.resample(this.src.sampleRate);
-		const audioSampleLength = sound.length * this.src.sampleRate;
 		for (let i = 0; i < Math.max(sound.raw.length, this.src.raw.length); i++) {
-			this.src.setSamples(sound.raw[i] ?? new Float32Array(), offset, factor);
+			this.src.setSamples(sound.raw[i] ?? new Float32Array(), offset, i, factor, attackLength);
 		}
 		return this.src;
 	}

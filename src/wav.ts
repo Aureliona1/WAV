@@ -102,8 +102,9 @@ export class WAV {
 	 * @param offset The offset (in seconds) to start the samples from.
 	 * @param channels The channel/s to add the samples to.
 	 * @param factor The factor to interpolate the new samples with the old ones (Default - 1).
+	 * @param attackLength The amount of time (in seconds) to bring in the new samples to the factor.
 	 */
-	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), factor = 1): this {
+	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), factor = 1, attackLength = 0): this {
 		offset *= this.sampleRate;
 		if (typeof channels === "number") {
 			channels = [channels];
@@ -114,17 +115,10 @@ export class WAV {
 			this.raw[channel] ??= new Float32Array();
 			const newSamples = new Float32Array(Math.max(this.raw[channel].length, samples.length + offset));
 			newSamples.set(this.raw[channel]);
-			switch (factor) {
-				case 1:
-					newSamples.set(samples, offset);
-					break;
-				case 0:
-					break;
-				default:
-					for (let j = offset; j < newSamples.length; j++) {
-						newSamples[j] = lerp(newSamples[j], samples[j - offset], factor);
-					}
-					break;
+			if (factor !== 0) {
+				for (let j = offset; j < newSamples.length; j++) {
+					newSamples[j] = lerp(newSamples[j], samples[j - offset], lerp(0, factor, attackLength ? clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]) : 1));
+				}
 			}
 			this.raw[channel] = newSamples;
 		}
