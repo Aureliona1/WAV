@@ -116,7 +116,7 @@ export class WAV {
 			const newSamples = new Float32Array(Math.max(this.raw[channel].length, samples.length + offset));
 			newSamples.set(this.raw[channel]);
 			if (factor !== 0) {
-				for (let j = offset; j < newSamples.length; j++) {
+				for (let j = Math.round(offset); j < samples.length + offset; j++) {
 					newSamples[j] = lerp(newSamples[j], samples[j - offset], lerp(0, factor, attackLength ? clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]) : 1));
 				}
 			}
@@ -127,7 +127,7 @@ export class WAV {
 	/**
 	 * Write the audio to a WAV file.
 	 * @param path The path of the WAV file. ".wav" is optional.
-	 * @param sampleFormat The bit depth and numbr format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Defualt - 16-bit Int)
+	 * @param sampleFormat The bit depth and number format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Defualt - 16-bit Int)
 	 * @param monoType How the audio shold be transformed to mono, leave blank for stereo audio. If the audio has only 1 channel, it will be mono.
 	 */
 	async writeFile(path: string = "wav", sampleFormat: WAVFormat = "16-bit Int", monoType?: MonoType): Promise<this> {
