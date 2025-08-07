@@ -105,7 +105,7 @@ export class WAV {
 	 * @param attackLength The amount of time (in seconds) to bring in the new samples to the factor.
 	 */
 	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), factor = 1, attackLength = 0): this {
-		offset *= this.sampleRate;
+		offset = Math.round(offset * this.sampleRate);
 		if (typeof channels === "number") {
 			channels = [channels];
 		}
@@ -116,7 +116,7 @@ export class WAV {
 			const newSamples = new Float32Array(Math.max(this.raw[channel].length, samples.length + offset));
 			newSamples.set(this.raw[channel]);
 			if (factor !== 0) {
-				for (let j = Math.round(offset); j < samples.length + offset; j++) {
+				for (let j = offset; j < samples.length + offset; j++) {
 					newSamples[j] = lerp(newSamples[j], samples[j - offset], lerp(0, factor, attackLength ? clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]) : 1));
 				}
 			}
