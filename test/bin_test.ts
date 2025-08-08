@@ -1,8 +1,8 @@
-import { clog, compare } from "@aurellis/helpers";
+import { clog } from "@aurellis/helpers";
 import { decode } from "../src/binary/decode.ts";
-import { assert } from "../src/vendor/assert.ts";
 import { encode } from "../src/binary/encode.ts";
 import { BYTE_OFFSETS } from "../src/types.ts";
+import { assert } from "../src/vendor/assert.ts";
 
 clog("Encode tests depend on decode being correct, failures in decoding may result in test failures for encoding...", "Log", "Binary Tests");
 

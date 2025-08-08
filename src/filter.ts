@@ -88,4 +88,21 @@ export class WAVFilter {
 		}
 		return this;
 	}
+	/**
+	 * Normalise the audio to a set amplitude.
+	 * @param amplitude The absolute maximum value that the waveform will have. (Default - 1 / full dynamic range)
+	 */
+	normalise(amplitude = 1): this {
+		let max = 0;
+		for (let c = 0; c < this.src.raw.length; c++) {
+			for (let i = 0; i < this.src.raw[c].length; i++) {
+				const abs = Math.abs(this.src.raw[c][i]);
+				if (abs > max) {
+					max = abs;
+				}
+			}
+		}
+		this.gain(amplitude / max);
+		return this;
+	}
 }

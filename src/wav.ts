@@ -101,26 +101,26 @@ export class WAV {
 	 * @param samples The samples to add.
 	 * @param offset The offset (in seconds) to start the samples from.
 	 * @param channels The channel/s to add the samples to.
-	 * @param factor The factor to interpolate the new samples with the old ones (Default - 1).
+	 * @param normalise Whether to normalise the resulting samples. Sample values may extend the valid range if this is set to false. (Default - false)
 	 * @param attackLength The amount of time (in seconds) to bring in the new samples to the factor.
 	 */
-	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), factor = 1, attackLength = 0): this {
+	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), normalise = false, attackLength = 0): this {
 		offset = Math.round(offset * this.sampleRate);
 		if (typeof channels === "number") {
 			channels = [channels];
 		}
-		factor = clamp(factor, [0, 1]);
 		for (let i = 0; i < channels.length; i++) {
 			const channel = channels[i];
 			this.raw[channel] ??= new Float32Array();
 			const newSamples = new Float32Array(Math.max(this.raw[channel].length, samples.length + offset));
 			newSamples.set(this.raw[channel]);
-			if (factor !== 0) {
-				for (let j = offset; j < samples.length + offset; j++) {
-					newSamples[j] = lerp(newSamples[j], samples[j - offset], lerp(0, factor, attackLength ? clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]) : 1));
-				}
+			for (let j = offset; j < samples.length + offset; j++) {
+				newSamples[j] += samples[j - offset] * clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]);
 			}
 			this.raw[channel] = newSamples;
+		}
+		if (normalise) {
+			this.filter.normalise();
 		}
 		return this;
 	}
@@ -156,6 +156,7 @@ export class WAV {
 					break;
 			}
 		}
+		this.filter.normalise();
 		await Deno.writeFile(path, encode(outputChannels, this.sampleRate, sampleFormat));
 		return this;
 	}
