@@ -21,7 +21,7 @@ export class WAVAdd {
 		start *= this.src.sampleRate;
 		end *= this.src.sampleRate;
 		// Add samples
-		const samples = new Float32Array(end - start);
+		const samples = new Float64Array(end - start);
 		this.src.setSamples(samples, start / this.src.sampleRate, channels);
 		return this.src;
 	}
@@ -37,7 +37,7 @@ export class WAVAdd {
 	waveform(time: Vec2 = [0, this.src.length], frequencies: [number, number, Easing?] = [note.C(5), note.C(5)], wave: (x: number) => number = waveform.sine, channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x), normalise = false): WAV {
 		const sampleRate = this.src.sampleRate;
 		let phase = 0;
-		const samples = new Float32Array(
+		const samples = new Float64Array(
 			Array(Math.round((time[1] - time[0]) * sampleRate))
 				.fill(0)
 				.map((_, i, a) => {
@@ -63,7 +63,7 @@ export class WAVAdd {
 		sound.resample(this.src.sampleRate);
 		sound.filter.gain(volume);
 		for (let i = 0; i < Math.max(sound.raw.length, this.src.raw.length); i++) {
-			this.src.setSamples(sound.raw[i] ?? new Float32Array(), offset, i, normalise, attackLength);
+			this.src.setSamples(sound.raw[i] ?? new Float64Array(), offset, i, normalise, attackLength);
 		}
 		return this.src;
 	}

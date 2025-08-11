@@ -2,7 +2,7 @@ import { clamp } from "@aurellis/helpers";
 import type { Waveform } from "./types.ts";
 
 /**
- * A collectino of functions that return the frequency of standard musical notes.
+ * A collection of functions that return the frequency of standard musical notes.
  */
 export class note {
 	/**

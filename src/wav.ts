@@ -52,7 +52,7 @@ export class WAV {
 	 * @param raw The raw channel samples, all channels must have the same number of samples.
 	 * @param sampleRate The sample rate of the audio.
 	 */
-	constructor(public raw: Float32Array[] = [], public sampleRate = 44100) {}
+	constructor(public raw: Float64Array[] = [], public sampleRate = 44100) {}
 	/**
 	 * Get the length of the audio in seconds.
 	 */
@@ -92,7 +92,7 @@ export class WAV {
 	 */
 	resample(rate: number): this {
 		const ratio = rate / this.sampleRate;
-		this.raw = this.raw.map((x, i) => new Float32Array(Math.floor(x.length * ratio)).map((_, j) => this.raw[i][Math.floor(j / ratio)]));
+		this.raw = this.raw.map((x, i) => new Float64Array(Math.floor(x.length * ratio)).map((_, j) => this.raw[i][Math.floor(j / ratio)]));
 		this.sampleRate = rate;
 		return this;
 	}
@@ -104,15 +104,15 @@ export class WAV {
 	 * @param normalise Whether to normalise the resulting samples. Sample values may extend the valid range if this is set to false. (Default - false)
 	 * @param attackLength The amount of time (in seconds) to bring in the new samples to the factor.
 	 */
-	setSamples(samples: Float32Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), normalise = false, attackLength = 0): this {
+	setSamples(samples: Float64Array, offset = 0, channels: ArrayLike<number> | number = arrFromFunction(this.raw.length, x => x), normalise = false, attackLength = 0): this {
 		offset = Math.round(offset * this.sampleRate);
 		if (typeof channels === "number") {
 			channels = [channels];
 		}
 		for (let i = 0; i < channels.length; i++) {
 			const channel = channels[i];
-			this.raw[channel] ??= new Float32Array();
-			const newSamples = new Float32Array(Math.max(this.raw[channel].length, samples.length + offset));
+			this.raw[channel] ??= new Float64Array();
+			const newSamples = new Float64Array(Math.max(this.raw[channel].length, samples.length + offset));
 			newSamples.set(this.raw[channel]);
 			for (let j = offset; j < samples.length + offset; j++) {
 				newSamples[j] += samples[j - offset] * clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]);
@@ -136,7 +136,7 @@ export class WAV {
 		if (!this.hasValidSampleCount) {
 			const padTo = Math.max(...this.raw.map(x => x.length));
 			for (let i = 0; i < this.raw.length; i++) {
-				this.raw[i] = concatTypedArray(this.raw[i], new Float32Array(padTo - this.raw[i].length));
+				this.raw[i] = concatTypedArray(this.raw[i], new Float64Array(padTo - this.raw[i].length));
 			}
 		}
 		if (monoType && outputChannels.length > 1) {
@@ -148,7 +148,7 @@ export class WAV {
 					outputChannels = [outputChannels[1]];
 					break;
 				case "Average LR":
-					const newChannel = new Float32Array(outputChannels[0].length);
+					const newChannel = new Float64Array(outputChannels[0].length);
 					for (let i = 0; i < newChannel.length; i++) {
 						newChannel[i] = lerp(outputChannels[0][i], outputChannels[1][i], 0.5);
 					}

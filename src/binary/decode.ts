@@ -63,7 +63,7 @@ export function decode(bytes: Uint8Array): DecodeResult {
 	const dataStart = dataOffset + 8;
 	const dataLength = view.getUint32(dataOffset + 4, true);
 	const sampleLength = dataLength / ((channelCount * bitsPerSample) / 8);
-	const channels = Array.from({ length: channelCount }, () => new Float32Array(sampleLength));
+	const channels = Array.from({ length: channelCount }, () => new Float64Array(sampleLength));
 	for (let cursor = dataStart, block = 0; block < sampleLength; block++) {
 		for (let channel = 0; channel < channelCount; channel++) {
 			channels[channel][block] = getDecoder(float, bitsPerSample as WAVBitDepth)(view, cursor);

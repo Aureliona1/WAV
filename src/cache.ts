@@ -80,7 +80,7 @@ export class WAVCache {
 			clog("Couldn't delete cache file, cache will be cleared in memory but file may still exist on disk...", "Warning", "WAV Cache");
 		} finally {
 			this.tac.dict.clear();
-			this.tac.dataChunk = new Float32Array();
+			this.tac.dataChunk = new Float64Array();
 			this.tac.dictLength = 0;
 		}
 	}

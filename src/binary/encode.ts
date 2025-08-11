@@ -52,7 +52,7 @@ function getEncoder(float: boolean, bits: WAVBitDepth): (view: DataView, pos: nu
  * @param sampleRate The sample rate of the audio.
  * @param format The format of the output (Default - 16-bit Int).
  */
-export function encode(channelData: Float32Array[], sampleRate = 44100, format: WAVFormat = "16-bit Int"): Uint8Array {
+export function encode(channelData: Float64Array[], sampleRate = 44100, format: WAVFormat = "16-bit Int"): Uint8Array {
 	const channelCount = channelData.length;
 	const bitDepth = (Number(format.substring(0, 2)) as WAVBitDepth) || 8;
 	const bytesPerSec = (sampleRate * channelCount * bitDepth) / 8;

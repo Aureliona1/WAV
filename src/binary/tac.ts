@@ -26,7 +26,7 @@ The end of each sample's section in the datachunk will be calculated as indexSta
 
 Each dictionary entry takes 15 + nameLength bytes.
 
-datachunk: Float32Array
+datachunk: Float64Array
 */
 export class TAC {
 	/**
@@ -52,7 +52,7 @@ export class TAC {
 	static from(raw: Uint8Array): TAC {
 		const view = new DataView(raw.buffer);
 		const dictLength = raw.length >= 4 ? view.getUint32(0) : 0;
-		const dataChunk = new Float32Array(raw.buffer, raw.byteOffset + dictLength + 4, (raw.length - dictLength - 4) / 4);
+		const dataChunk = new Float64Array(raw.buffer, raw.byteOffset + dictLength + 4, (raw.length - dictLength - 4) / 4);
 		const output = new TAC(dictLength, new Map(), dataChunk);
 
 		try {
@@ -80,7 +80,7 @@ export class TAC {
 	/**
 	 * An interface to TAC cache files. Never construct this class by itself. Use the {@link WAV.cache} member on WAV.
 	 */
-	constructor(public dictLength = 0, public dict: Map<string, TacDictEntry> = new Map(), public dataChunk: Float32Array = new Float32Array()) {}
+	constructor(public dictLength = 0, public dict: Map<string, TacDictEntry> = new Map(), public dataChunk: Float64Array = new Float64Array()) {}
 	/**
 	 * Validates TAC dictionary values, and makes corrections when needed and possible.
 	 *
@@ -168,7 +168,7 @@ export class TAC {
 			this.dict.delete(entryName);
 		}
 		const thisEntry: TacDictEntry = {
-			sampleCount: (wav.raw[0] ?? new Float32Array()).length,
+			sampleCount: (wav.raw[0] ?? new Float64Array()).length,
 			channelCount: wav.raw.length,
 			sampleRate: wav.sampleRate,
 			indexOffset: this.dataChunk.length,
@@ -191,7 +191,7 @@ export class TAC {
 		const entry = this.dict.get(entryName)!;
 		const dec: DecodeResult = {
 			sampleRate: entry.sampleRate,
-			channelData: new Array(entry.channelCount).fill(new Float32Array()).map((_, i) => this.dataChunk.subarray(entry.indexOffset + i * entry.sampleCount, entry.indexOffset + (i + 1) * entry.sampleCount))
+			channelData: new Array(entry.channelCount).fill(new Float64Array()).map((_, i) => this.dataChunk.subarray(entry.indexOffset + i * entry.sampleCount, entry.indexOffset + (i + 1) * entry.sampleCount))
 		};
 		return dec;
 	}
