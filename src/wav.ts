@@ -156,7 +156,7 @@ export class WAV {
 					break;
 			}
 		}
-		this.filter.normalise();
+		this.filter.normaliseDown();
 		await Deno.writeFile(path, encode(outputChannels, this.sampleRate, sampleFormat));
 		return this;
 	}
