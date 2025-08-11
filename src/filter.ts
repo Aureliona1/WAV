@@ -1,4 +1,4 @@
-import { arrFromFunction, clamp, concatTypedArray, type Easing, lerp, mapRange, type Vec2 } from "@aurellis/helpers";
+import { arrFromFunction, clamp, concatTypedArrays, type Easing, lerp, mapRange, type Vec2 } from "@aurellis/helpers";
 import type { WAV } from "./wav.ts";
 
 /**
@@ -78,7 +78,7 @@ export class WAVFilter {
 					const addIndex = i + timeOffset * this.src.sampleRate;
 					// If out-of-bounds, double the array, and keep a true length counter.
 					if (addIndex >= this.src.raw[channel].length) {
-						this.src.raw[channel] = concatTypedArray(this.src.raw[channel], new Float64Array(this.src.raw[channel].length));
+						this.src.raw[channel] = concatTypedArrays(this.src.raw[channel], new Float64Array(this.src.raw[channel].length));
 						trueChannelLength = addIndex + 1;
 					}
 					this.src.raw[channel][addIndex] += clamp(this.src.raw[channel][i] * decay, [-1, 1]);

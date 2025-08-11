@@ -1,4 +1,4 @@
-import { arrFromFunction, clamp, clog, concatTypedArray, lerp } from "@aurellis/helpers";
+import { arrFromFunction, clamp, clog, concatTypedArrays, lerp } from "@aurellis/helpers";
 import { WAVAdd } from "./adder.ts";
 import { decode } from "./binary/decode.ts";
 import { encode } from "./binary/encode.ts";
@@ -136,7 +136,7 @@ export class WAV {
 		if (!this.hasValidSampleCount) {
 			const padTo = Math.max(...this.raw.map(x => x.length));
 			for (let i = 0; i < this.raw.length; i++) {
-				this.raw[i] = concatTypedArray(this.raw[i], new Float64Array(padTo - this.raw[i].length));
+				this.raw[i] = concatTypedArrays(this.raw[i], new Float64Array(padTo - this.raw[i].length));
 			}
 		}
 		if (monoType && outputChannels.length > 1) {

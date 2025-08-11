@@ -1,4 +1,4 @@
-import { clog, concatTypedArray } from "@aurellis/helpers";
+import { clog, concatTypedArrays } from "@aurellis/helpers";
 import type { DecodeResult, TacDictEntry } from "../types.ts";
 import type { WAV } from "../wav.ts";
 
@@ -143,7 +143,7 @@ export class TAC {
 			const nameLength = new TextEncoder().encode(entry.name).length;
 			this.dictLength -= TAC.DICT_ENTRY_BASE_LENGTH + nameLength;
 			const dataLength = TAC.entryDataLength(entry);
-			this.dataChunk = concatTypedArray(this.dataChunk.subarray(0, entry.indexOffset), this.dataChunk.subarray(entry.indexOffset + dataLength));
+			this.dataChunk = concatTypedArrays(this.dataChunk.subarray(0, entry.indexOffset), this.dataChunk.subarray(entry.indexOffset + dataLength));
 			this.dict.forEach(e => {
 				if (e.indexOffset > entry.indexOffset) {
 					e.indexOffset -= dataLength;
@@ -177,7 +177,7 @@ export class TAC {
 		};
 		this.dictLength += TAC.DICT_ENTRY_BASE_LENGTH + thisEntry.nameLength;
 		this.dict.set(entryName, thisEntry);
-		this.dataChunk = concatTypedArray(this.dataChunk, ...wav.raw);
+		this.dataChunk = concatTypedArrays(this.dataChunk, ...wav.raw);
 	}
 
 	/**
