@@ -5,7 +5,10 @@
   },
   "jsr": {
     "@aurellis/helpers@1.2.6": {
-      "integrity": "9d68c43a448676645fd1e5b89985afe5c5a52c73325329fc1f6826bd306a2cda"
+      "integrity": "9d68c43a448676645fd1e5b89985afe5c5a52c73325329fc1f6826bd306a2cda",
+      "dependencies": [
+        "jsr:@aurellis/helpers"
+      ]
     }
   },
   "workspace": {
