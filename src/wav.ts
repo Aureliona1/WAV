@@ -115,7 +115,11 @@ export class WAV {
 			const newSamples = new Float64Array(Math.max(this.raw[channel].length, samples.length + offset));
 			newSamples.set(this.raw[channel]);
 			for (let j = offset; j < samples.length + offset; j++) {
-				newSamples[j] += samples[j - offset] * clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]);
+				let factor = 1;
+				if (attackLength && this.sampleRate) {
+					factor = clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]);
+				}
+				newSamples[j] += samples[j - offset] * factor;
 			}
 			this.raw[channel] = newSamples;
 		}
