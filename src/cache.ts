@@ -1,4 +1,4 @@
-import { clog, pathCanBeAccessed } from "@aurellis/helpers";
+import { clog, pathAccessibleSync } from "@aurellis/helpers";
 import { TAC } from "./binary/tac.ts";
 import type { DecodeResult } from "./types.ts";
 import type { WAV } from "./wav.ts";
@@ -11,7 +11,7 @@ export class WAVCache {
 	 * Read the cache file and update in-memory.
 	 */
 	private readFile() {
-		if (pathCanBeAccessed(this.fileName)) {
+		if (pathAccessibleSync(this.fileName)) {
 			try {
 				this.tac = TAC.from(Deno.readFileSync(this.fileName));
 			} catch (_) {
@@ -26,7 +26,7 @@ export class WAVCache {
 	 * @param fileName The name of the TAC cache.
 	 */
 	constructor(public readonly fileName = "cache.tac") {
-		if (pathCanBeAccessed(fileName)) {
+		if (pathAccessibleSync(fileName)) {
 			this.readFile();
 		} else {
 			this.tac = new TAC();
