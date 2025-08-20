@@ -1,7 +1,6 @@
 import { arrFromFunction, type Easing, lerp, type Vec2, waveform } from "@aurellis/helpers";
 import { note } from "./note.ts";
 import type { WAV } from "./wav.ts";
-import { clog } from "jsr:@aurellis/helpers@1.3.0";
 
 /**
  * A utility class with many functions that add samples or sounds to a WAV. Do not construct this class by itself, use {@link WAV.add}.

@@ -33,6 +33,6 @@
 	"license": "MIT",
 	"exports": "./mod.ts",
 	"imports": {
-		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.2.7"
+		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.4.1"
 	}
 }
