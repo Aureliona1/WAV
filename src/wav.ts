@@ -97,7 +97,7 @@ export class WAV {
 		return this;
 	}
 	/**
-	 * Add samples to the audio in the form of sample arrays (Float32Array).
+	 * Add samples to the audio in the form of sample arrays (Float64Array).
 	 * @param samples The samples to add.
 	 * @param offset The offset (in seconds) to start the samples from.
 	 * @param channels The channel/s to add the samples to.
