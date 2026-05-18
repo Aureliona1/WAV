@@ -32,11 +32,11 @@ export class TAC {
 	/**
 	 * Base length of a dict entry with a 0-length name.
 	 */
-	private static DICT_ENTRY_BASE_LENGTH = 15;
+	private static readonly DICT_ENTRY_BASE_LENGTH = 15;
 	/**
 	 * Maximum name length supported by the dict.
 	 */
-	private static DICT_NAME_MAX_LENGTH = 256;
+	private static readonly DICT_NAME_MAX_LENGTH = 256;
 	/**
 	 * Get the length of an entry in the datachunk.
 	 */
@@ -72,7 +72,7 @@ export class TAC {
 				output.dict.set(thisEntry.name, thisEntry as TacDictEntry);
 			}
 		} catch (_) {
-			clog("Input TAC file either has an invalid dict length, or is missing bytes, resulting TAC may be corrupted...", "Warning", "TIC");
+			clog("Input TAC file either has an invalid dict length, or is missing bytes, resulting TAC may be corrupted...", "Warning", "TAC");
 		}
 		return output;
 	}
@@ -80,7 +80,11 @@ export class TAC {
 	/**
 	 * An interface to TAC cache files. Never construct this class by itself. Use the {@link WAV.cache} member on WAV.
 	 */
-	constructor(public dictLength = 0, public dict: Map<string, TacDictEntry> = new Map(), public dataChunk: Float64Array = new Float64Array()) {}
+	constructor(
+		public dictLength = 0,
+		public dict: Map<string, TacDictEntry> = new Map(),
+		public dataChunk: Float64Array = new Float64Array()
+	) {}
 	/**
 	 * Validates TAC dictionary values, and makes corrections when needed and possible.
 	 *
@@ -151,7 +155,7 @@ export class TAC {
 			});
 			this.dict.delete(entryName);
 		} else {
-			clog(`${entryName} could not be found in the dictionary, it may not exist...`, "Warning", "TIC");
+			clog(`${entryName} could not be found in the dictionary, it may not exist...`, "Warning", "TAC");
 		}
 	}
 	/**
