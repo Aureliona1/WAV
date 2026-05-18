@@ -43,7 +43,7 @@ export class WAVFilter {
 	}
 	/**
 	 * Bitcrush effect, quantises the waveform.
-	 * @param factor The number of bits to crush to (max 32, this can be float), can be either a number, or [val1, val2] for transition.
+	 * @param factor The number of bits to crush to (max 64, this can be float), can be either a number, or [val1, val2] for transition.
 	 * @param time The start and time of the bitcrush, leave blank for the start and end of the audio.
 	 * @param easing Optional easing for the transition.
 	 */
