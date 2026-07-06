@@ -52,7 +52,10 @@ export class WAV {
 	 * @param raw The raw channel samples, all channels must have the same number of samples.
 	 * @param sampleRate The sample rate of the audio.
 	 */
-	constructor(public raw: Float64Array[] = [], public sampleRate = 44100) {}
+	constructor(
+		public raw: Float64Array[] = [],
+		public sampleRate = 44100
+	) {}
 	/**
 	 * Get the length of the audio in seconds.
 	 */
@@ -117,7 +120,7 @@ export class WAV {
 			for (let j = offset; j < samples.length + offset; j++) {
 				let factor = 1;
 				if (attackLength && this.sampleRate) {
-					factor = clamp((j - offset) / (attackLength * this.sampleRate), [0, 1]);
+					factor = clamp((j - offset) / (attackLength * this.sampleRate), 0, 1);
 				}
 				newSamples[j] += samples[j - offset] * factor;
 			}

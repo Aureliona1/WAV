@@ -35,9 +35,9 @@ export class WAVFilter {
 		time[0] *= this.src.sampleRate;
 		time[1] *= this.src.sampleRate;
 		if (typeof factor === "object") {
-			this.src.raw = this.src.raw.map(x => x.map((y, i) => (i >= time[0] && i < time[1] ? clamp(y, [lerp(-factor[0], -factor[1], mapRange(i, time, [0, 1], 10), easing), lerp(factor[0], factor[1], mapRange(i, time, [0, 1], 10), easing)]) : y)));
+			this.src.raw = this.src.raw.map(x => x.map((y, i) => (i >= time[0] && i < time[1] ? clamp(y, lerp(-factor[0], -factor[1], mapRange(i, time, [0, 1], 10), easing), lerp(factor[0], factor[1], mapRange(i, time, [0, 1], 10), easing)) : y)));
 		} else {
-			this.src.raw = this.src.raw.map(x => x.map((y, i) => (i >= time[0] && i < time[1] ? clamp(y, [-factor, factor]) : y)));
+			this.src.raw = this.src.raw.map(x => x.map((y, i) => (i >= time[0] && i < time[1] ? clamp(y, -factor, factor) : y)));
 		}
 		return this;
 	}
@@ -66,7 +66,7 @@ export class WAVFilter {
 	 * @param thresh The minimum volume of a sample to add delay to.
 	 */
 	delay(timeOffset = 0.1, decay = 0.5, channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x), thresh = 0.001): this {
-		thresh = clamp(thresh, [0, 1]);
+		thresh = clamp(thresh, 0, 1);
 		if (typeof channels === "number") {
 			channels = [channels];
 		}
@@ -81,7 +81,7 @@ export class WAVFilter {
 						this.src.raw[channel] = concatTypedArrays(this.src.raw[channel], new Float64Array(this.src.raw[channel].length));
 						trueChannelLength = addIndex + 1;
 					}
-					this.src.raw[channel][addIndex] += clamp(this.src.raw[channel][i] * decay, [-1, 1]);
+					this.src.raw[channel][addIndex] += clamp(this.src.raw[channel][i] * decay, -1, 1);
 				}
 			}
 			this.src.raw[channel] = this.src.raw[channel].slice(0, trueChannelLength);

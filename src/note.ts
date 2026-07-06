@@ -9,7 +9,7 @@ export class note {
 	 * Generate a note function from a base frequency and octave.
 	 */
 	private static noteFunc(oct: number, base: number): number {
-		oct = Math.floor(clamp(oct, [0, 8]));
+		oct = Math.floor(clamp(oct, 0, 8));
 		return base * Math.pow(2, oct);
 	}
 	/**

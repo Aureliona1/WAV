@@ -6,7 +6,7 @@
 	},
 	"lint": {
 		"include": [
-			"src/",
+			"src/*",
 			"mod.ts"
 		],
 		"rules": {
@@ -22,7 +22,7 @@
 		}
 	},
 	"tasks": {
-		"doc": "deno doc --lint src/",
+		"doc": "deno doc --lint mod.ts",
 		"commit": {
 			"description": "Run pre-commit checks.",
 			"command": "deno lint && deno test --allow-all"
