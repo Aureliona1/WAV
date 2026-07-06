@@ -9,15 +9,15 @@ const encoders: {
 	[key: string]: (view: DataView, pos: number, value: number) => void;
 } = {
 	i8: (view, pos, value) => {
-		view.setUint8(pos, mapRange(clamp(value, [-1, 1]), [-1, 1], [0, (1 << 8) - 1], 0));
+		view.setUint8(pos, mapRange(clamp(value, -1, 1), [-1, 1], [0, (1 << 8) - 1], 0));
 	},
 
 	i16: (view, pos, value) => {
-		view.setInt16(pos, mapRange(clamp(value, [-1, 1]), [-1, 1], [-(1 << 15), (1 << 15) - 1], 0), true);
+		view.setInt16(pos, mapRange(clamp(value, -1, 1), [-1, 1], [-(1 << 15), (1 << 15) - 1], 0), true);
 	},
 
 	i24: (view, pos, value) => {
-		const scaled = mapRange(clamp(value, [-1, 1]), [-1, 1], [-(1 << 23), (1 << 23) - 1]);
+		const scaled = mapRange(clamp(value, -1, 1), [-1, 1], [-(1 << 23), (1 << 23) - 1]);
 		let v = scaled < 0 ? scaled + 0x1000000 : scaled;
 		view.setUint8(pos, v & 0xff);
 		view.setUint8(pos + 1, (v >> 8) & 0xff);
@@ -25,15 +25,15 @@ const encoders: {
 	},
 
 	i32: (view, pos, value) => {
-		view.setInt32(pos, mapRange(clamp(value, [-1, 1]), [-1, 1], [-(1 << 31), (1 << 31) - 1]), true);
+		view.setInt32(pos, mapRange(clamp(value, -1, 1), [-1, 1], [-(1 << 31), (1 << 31) - 1]), true);
 	},
 
 	f32: (view, pos, value) => {
-		view.setFloat32(pos, clamp(value, [-1, 1]), true);
+		view.setFloat32(pos, clamp(value, -1, 1), true);
 	},
 
 	f64: (view, pos, value) => {
-		view.setFloat64(pos, clamp(value, [-1, 1]), true);
+		view.setFloat64(pos, clamp(value, -1, 1), true);
 	}
 };
 

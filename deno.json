@@ -29,10 +29,10 @@
 		}
 	},
 	"name": "@aurellis/wav",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"license": "MIT",
 	"exports": "./mod.ts",
 	"imports": {
-		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.4.1"
+		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.5.3"
 	}
 }

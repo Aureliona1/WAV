@@ -4,7 +4,7 @@ import { encode } from "../src/binary/encode.ts";
 import { BYTE_OFFSETS } from "../src/types.ts";
 import { assert } from "../src/vendor/assert.ts";
 
-clog("Encode tests depend on decode being correct, failures in decoding may result in test failures for encoding...", "Log", "Binary Tests");
+clog("Encode tests depend on decode being correct, errors in decoding may mask errors in encoding...", "Log", "Binary Tests");
 
 Deno.test({
 	name: "Decode Mono 16",
