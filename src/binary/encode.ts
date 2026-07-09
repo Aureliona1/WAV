@@ -38,10 +38,11 @@ const encoders: {
 };
 
 /**
- * Return an encode function of the specified bit depth and float.
- * Defaults to Uint8 if depth and float are invalid.
+ * Returns a function that accepts a data view, a position, and a value. The function encodes the value (from -1 to 1) as a LE value in the specified format.
+ * @param float Whether the data should be encoded as a float.
+ * @param bits The bit depth of the encoded data. 8-bit depth is treated as u8, but all other depths are be signed.
  */
-function getEncoder(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number, value: number) => void {
+export function byteEncoderLE(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number, value: number) => void {
 	const key = (float ? "f" : "i") + bits;
 	return encoders[key] ?? encoders.i8;
 }
@@ -82,7 +83,7 @@ export function encode(channelData: Float64Array[], sampleRate = 44100, format: 
 	view.setUint32(BYTE_OFFSETS.DATA_LENGTH, audioDataLength, true);
 	const interleavedSamples = ArrOp.interleave(...channelData);
 	for (let i = 0; i < interleavedSamples.length; i++) {
-		getEncoder(float, bitDepth)(view, 44 + i * (bitDepth / 8), interleavedSamples[i]);
+		byteEncoderLE(float, bitDepth)(view, 44 + i * (bitDepth / 8), interleavedSamples[i]);
 	}
 
 	return new Uint8Array(outputBuffer);

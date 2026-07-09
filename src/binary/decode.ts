@@ -24,10 +24,11 @@ const decoders: {
 };
 
 /**
- * Return a decode function of the specified bit depth and float.
- * Defaults to Uint8 if depth and float are invalid.
+ * Returns a function that accepts a data view and a position and decodes the data specified by the format arguments into a float from [-1, 1].
+ * @param float Whether the data is already encoded as a float.
+ * @param bits The bit depth of the encoded data. 8-bit depth is treated as u8, but all other depths are signed.
  */
-function getDecoder(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number) => number {
+export function byteDecoderLE(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number) => number {
 	const key = (float ? "f" : "i") + bits;
 	return decoders[key] ?? decoders.i8;
 }
@@ -66,7 +67,7 @@ export function decode(bytes: Uint8Array): DecodeResult {
 	const channels = Array.from({ length: channelCount }, () => new Float64Array(sampleLength));
 	for (let cursor = dataStart, block = 0; block < sampleLength; block++) {
 		for (let channel = 0; channel < channelCount; channel++) {
-			channels[channel][block] = getDecoder(float, bitsPerSample as WAVBitDepth)(view, cursor);
+			channels[channel][block] = byteDecoderLE(float, bitsPerSample as WAVBitDepth)(view, cursor);
 			cursor += bitsPerSample / 8;
 		}
 	}
