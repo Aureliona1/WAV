@@ -55,7 +55,7 @@ export function byteEncoderLE(float: boolean, bits: WAVBitDepth): (view: DataVie
  */
 export function encode(channelData: Float64Array[], sampleRate = 44100, format: WAVFormat = "16-bit Int"): Uint8Array {
 	const channelCount = channelData.length;
-	const bitDepth = (Number(format.substring(0, 2)) as WAVBitDepth) || 8;
+	const bitDepth = (parseInt(format.substring(0, 2)) as WAVBitDepth) || 8;
 	const bytesPerSec = (sampleRate * channelCount * bitDepth) / 8;
 	const bytesPerBlock = (channelCount * bitDepth) / 8;
 	const audioDataLength = channelData[0].length * channelCount * (bitDepth / 8);
