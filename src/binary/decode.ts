@@ -1,4 +1,4 @@
-import { mapRange } from "@aurellis/helpers";
+import { clog, mapRange } from "@aurellis/helpers";
 import { BYTE_OFFSETS, type DecodeResult, type WAVBitDepth } from "../types.ts";
 
 /**
@@ -16,9 +16,9 @@ const decoders: {
 		const byte3 = view.getUint8(pos + 2);
 		let val = (byte3 << 16) | (byte2 << 8) | byte1;
 		if (val & 0x800000) val |= 0xff000000;
-		return mapRange(val, [-(1 << 23), (1 << 23) - 1], [-1, 1]);
+		return mapRange(val, [-0x800000, 0x7fffff], [-1, 1]);
 	},
-	i32: (view, pos) => mapRange(view.getInt32(pos, true), [-(1 << 31), (1 << 31) - 1], [-1, 1]),
+	i32: (view, pos) => mapRange(view.getInt32(pos, true), [-0x80000000, 0x7fffffff], [-1, 1]),
 	f32: (view, pos) => view.getFloat32(pos, true),
 	f64: (view, pos) => view.getFloat64(pos, true) // Pretty sure this isn't even valid in the WAV spec, but I guess it is technically possible.
 };
@@ -30,6 +30,7 @@ const decoders: {
  */
 export function byteDecoderLE(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number) => number {
 	const key = (float ? "f" : "i") + bits;
+	if (!(key in decoders)) clog(`The specified bit format (${key}) is not a valid WAV format, your audio file may be corrupted. WAV will treat the audio as i8.`, "Warning");
 	return decoders[key] ?? decoders.i8;
 }
 

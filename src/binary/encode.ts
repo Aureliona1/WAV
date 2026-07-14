@@ -1,4 +1,4 @@
-import { ArrOp, clamp, mapRange } from "@aurellis/helpers";
+import { ArrOp, clamp, clog, mapRange } from "@aurellis/helpers";
 import { BYTE_OFFSETS, type WAVBitDepth, type WAVFormat } from "../types.ts";
 
 /**
@@ -17,7 +17,7 @@ const encoders: {
 	},
 
 	i24: (view, pos, value) => {
-		const scaled = mapRange(clamp(value, -1, 1), [-1, 1], [-(1 << 23), (1 << 23) - 1]);
+		const scaled = mapRange(clamp(value, -1, 1), [-1, 1], [-0x800000, 0x7fffff]);
 		let v = scaled < 0 ? scaled + 0x1000000 : scaled;
 		view.setUint8(pos, v & 0xff);
 		view.setUint8(pos + 1, (v >> 8) & 0xff);
@@ -25,7 +25,7 @@ const encoders: {
 	},
 
 	i32: (view, pos, value) => {
-		view.setInt32(pos, mapRange(clamp(value, -1, 1), [-1, 1], [-(1 << 31), (1 << 31) - 1]), true);
+		view.setInt32(pos, mapRange(clamp(value, -1, 1), [-1, 1], [-0x80000000, 0x7fffffff]), true);
 	},
 
 	f32: (view, pos, value) => {
@@ -44,6 +44,7 @@ const encoders: {
  */
 export function byteEncoderLE(float: boolean, bits: WAVBitDepth): (view: DataView, pos: number, value: number) => void {
 	const key = (float ? "f" : "i") + bits;
+	if (!(key in encoders)) clog(`You have somehow specified an invalid WAV format (${key}), the audio will be treated as i8 as a fallback...`, "Warning");
 	return encoders[key] ?? encoders.i8;
 }
 
