@@ -14,7 +14,7 @@ export class WAVAdd {
 	 * Add silence to the WAV, will also extend the length of the audio if end is beyond the end of any existing audio.
 	 * @param start The start of the silence (seconds).
 	 * @param end The end of the silence (seconds).
-	 * @param channels The channel indices to addd the silence to, channels will be created if they are specified here.
+	 * @param channels The channel indices to add the silence to, channels will be created if they are specified here.
 	 */
 	silence(start: number, end: number, channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x)): WAV {
 		// Get sample points
@@ -34,7 +34,13 @@ export class WAVAdd {
 	 * @param channels The channels to add the wave to. (Default - All channels)
 	 * @param normalise Whether to normalise the resulting audio. (Default - false)
 	 */
-	waveform(time: Vec2 = [0, this.src.length], frequencies: [number, number, Easing?] = [note.C(5), note.C(5)], wave: (x: number) => number = waveform.sine, channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x), normalise = false): WAV {
+	waveform(
+		time: Vec2 = [0, this.src.length],
+		frequencies: [number, number, Easing?] = [note.C(5), note.C(5)],
+		wave: (x: number) => number = waveform.sine,
+		channels: ArrayLike<number> | number = arrFromFunction(this.src.raw.length, x => x),
+		normalise = false
+	): WAV {
 		const sampleRate = this.src.sampleRate;
 		const samples = new Float64Array(Math.round((time[1] - time[0]) * sampleRate));
 		for (let i = 0, phase = 0; i < samples.length; i++) {

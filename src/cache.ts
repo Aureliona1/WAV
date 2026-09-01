@@ -58,7 +58,7 @@ export class WAVCache {
 			Deno.writeFileSync(this.fileName, this.tac.encode());
 		} catch (_) {
 			clog("Error writing cache file, cache is still updated in memory but not on disk...", "Warning", "WAV Cache");
-			clog("Check your write permisions...", "Warning", "WAV Cache");
+			clog("Check your write permissions...", "Warning", "WAV Cache");
 		}
 	}
 

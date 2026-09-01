@@ -134,8 +134,8 @@ export class WAV {
 	/**
 	 * Write the audio to a WAV file.
 	 * @param path The path of the WAV file. ".wav" is optional.
-	 * @param sampleFormat The bit depth and number format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Defualt - 16-bit Int)
-	 * @param monoType How the audio shold be transformed to mono, leave blank for stereo audio. If the audio has only 1 channel, it will be mono.
+	 * @param sampleFormat The bit depth and number format that the samples should be translated to for encoding. Lower values will reduce audio quality and file size. (Default - 16-bit Int)
+	 * @param monoType How the audio should be transformed to mono, leave blank for stereo audio. If the audio has only 1 channel, it will be mono.
 	 */
 	async writeFile(path: string = "wav", sampleFormat: WAVFormat = "16-bit Int", monoType?: MonoType): Promise<this> {
 		path = /.*\.wav$/.test(path) ? path : path + ".wav";
