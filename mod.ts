@@ -7,3 +7,4 @@ export * from "./src/filter.ts";
 export * from "./src/note.ts";
 export * from "./src/types.ts";
 export * from "./src/wav.ts";
+export * from "./src/fft.ts";

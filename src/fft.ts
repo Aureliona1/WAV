@@ -24,16 +24,29 @@ function nextPowerOfTwo(n: number): number {
 	return pow;
 }
 
+/**
+ * Wrapper for handling FFT operations on an audio signal.
+ */
 export class FFT {
+	/**
+	 * Get the FFT of a finite audio signal.
+	 */
 	static transform(signal: Float64Array): DFTResult {
 		const im = new Float64Array(signal.length);
 		// fft mutates signal for memory usage, so we copy it on first call.
 		return this.fft(deepCopy(signal), im);
 	}
+
+	/**
+	 * Reconstruct the time-domain signal from a DFT.
+	 */
 	static inverse(spectrum: DFTResult): Float64Array {
 		return this.inverseComplex(spectrum).real;
 	}
 
+	/**
+	 * Perform inverse DFT on complex input.
+	 */
 	private static inverseComplex(spectrum: DFTResult, mutate = false): DFTResult {
 		const len = spectrum.real.length;
 
@@ -52,6 +65,10 @@ export class FFT {
 
 		return result;
 	}
+
+	/**
+	 * Dispatcher DFT based on input length.
+	 */
 	private static fft(real: Float64Array, imaginary: Float64Array): DFTResult {
 		const len = real.length;
 
@@ -64,6 +81,9 @@ export class FFT {
 		return this.cooleyTukey(real, imaginary, n, m);
 	}
 
+	/**
+	 * Standard O(N^2) DFT.
+	 */
 	private static directDFTComplex(real: Float64Array, imaginary: Float64Array): DFTResult {
 		const len = real.length;
 
@@ -93,6 +113,9 @@ export class FFT {
 		return out;
 	}
 
+	/**
+	 * Recursively compute DFT.
+	 */
 	private static cooleyTukey(real: Float64Array, imaginary: Float64Array, n: number, m: number): DFTResult {
 		const len = real.length;
 
@@ -154,37 +177,13 @@ export class FFT {
 		return { real: outputReal, imaginary: outputImaginary };
 	}
 
+	/**
+	 * Calculate DFT using convolution.
+	 */
 	private static bluestein(real: Float64Array, imaginary: Float64Array): DFTResult {
 		const n = real.length;
 
-		/*
-		 * Bluestein converts the N-point DFT into a convolution.
-		 *
-		 * Choose M >= 2N - 1.
-		 *
-		 * Using the next power of two is convenient, but M does not
-		 * actually need to be a power of two because fft() supports
-		 * arbitrary lengths.
-		 */
 		const m = nextPowerOfTwo(2 * n - 1);
-
-		/*
-		 * We need:
-		 *
-		 *   a[j] = x[j] * exp(-i*pi*j^2/N)
-		 *
-		 * and
-		 *
-		 *   b[k] = exp(i*pi*k^2/N)
-		 *
-		 * for k = -(N-1) ... (N-1).
-		 *
-		 * Then:
-		 *
-		 *   X[k] = exp(-i*pi*k^2/N) * (a * b)[k]
-		 *
-		 * where the convolution is evaluated at index k + N - 1.
-		 */
 
 		const aReal = new Float64Array(m);
 		const aImaginary = new Float64Array(m);
