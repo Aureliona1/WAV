@@ -114,16 +114,33 @@ export class FFT {
 	}
 
 	/**
-	 * Recursively compute DFT.
+	 * Recursively compute DFT using the Cooley-Tukey algorithm.
 	 */
 	private static cooleyTukey(real: Float64Array, imaginary: Float64Array, n: number, m: number): DFTResult {
 		const len = real.length;
 
-		if (len !== n * m) throw new Error("Invalid Cooley-Tukey factorisation");
+		if (len !== n * m) {
+			throw new Error("Invalid Cooley-Tukey factorisation");
+		}
 
 		const subReal = new Float64Array(m);
 		const subImaginary = new Float64Array(m);
 
+		// Store the row transforms separately from the input.
+		// The input arrays must not be overwritten while they are
+		// still being used by subsequent row transforms.
+		const rowReal = new Float64Array(len);
+		const rowImaginary = new Float64Array(len);
+
+		/*
+		 * First stage:
+		 *
+		 * For each r, calculate the m-point DFT:
+		 *
+		 *   A[r, s] = sum_q x[r + n*q] * exp(-2πi*s*q/m)
+		 *
+		 * and store the result in rowReal/rowImaginary.
+		 */
 		for (let r = 0; r < n; r++) {
 			for (let q = 0; q < m; q++) {
 				const index = r + n * q;
@@ -137,17 +154,26 @@ export class FFT {
 			for (let s = 0; s < m; s++) {
 				const index = r * m + s;
 
-				real[index] = result.real[s];
-				imaginary[index] = result.imaginary[s];
+				rowReal[index] = result.real[s];
+				rowImaginary[index] = result.imaginary[s];
 			}
 		}
 
-		const columnReal = subReal;
-		const columnImaginary = subImaginary;
+		const columnReal = new Float64Array(n);
+		const columnImaginary = new Float64Array(n);
 
 		const outputReal = new Float64Array(len);
 		const outputImaginary = new Float64Array(len);
 
+		/*
+		 * Second stage:
+		 *
+		 * Apply the twiddle factor:
+		 *
+		 *   exp(-2πi*r*s/N)
+		 *
+		 * and then perform an n-point DFT over r.
+		 */
 		for (let s = 0; s < m; s++) {
 			for (let r = 0; r < n; r++) {
 				const index = r * m + s;
@@ -157,8 +183,8 @@ export class FFT {
 				const cos = Math.cos(angle);
 				const sin = Math.sin(angle);
 
-				const a = real[index];
-				const b = imaginary[index];
+				const a = rowReal[index];
+				const b = rowImaginary[index];
 
 				columnReal[r] = a * cos - b * sin;
 				columnImaginary[r] = a * sin + b * cos;
@@ -174,7 +200,10 @@ export class FFT {
 			}
 		}
 
-		return { real: outputReal, imaginary: outputImaginary };
+		return {
+			real: outputReal,
+			imaginary: outputImaginary
+		};
 	}
 
 	/**
