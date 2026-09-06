@@ -1,16 +1,16 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@aurellis/helpers@^1.6.1": "1.6.1"
+    "jsr:@aurellis/helpers@^1.6.2": "1.6.2"
   },
   "jsr": {
-    "@aurellis/helpers@1.6.1": {
-      "integrity": "750b1fa13525e250b0c9327c7eaa932d0f7a4c72ad5290b021c6209671030177"
+    "@aurellis/helpers@1.6.2": {
+      "integrity": "33bede6c19a4401e5cd38c5f9d8e6a32761930f08cdcf0594257a0370f501c32"
     }
   },
   "workspace": {
     "dependencies": [
-      "jsr:@aurellis/helpers@^1.6.1"
+      "jsr:@aurellis/helpers@^1.6.2"
     ]
   }
 }

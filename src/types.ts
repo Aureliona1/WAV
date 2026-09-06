@@ -53,3 +53,11 @@ export type TacDictEntry = {
  * A function that transforms a time value into a point on a waveform.
  */
 export type Waveform = (x: number) => number;
+
+/**
+ * The result of performing an FFT a single audio signal.
+ */
+export type DFTResult = {
+	real: Float64Array;
+	imaginary: Float64Array;
+};

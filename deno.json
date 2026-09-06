@@ -1,4 +1,5 @@
 {
+	"minimumDependencyAge": 0,
 	"test": {
 		"include": [
 			"test/"
@@ -33,6 +34,6 @@
 	"license": "MIT",
 	"exports": "./mod.ts",
 	"imports": {
-		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.6.1"
+		"@aurellis/helpers": "jsr:@aurellis/helpers@^1.6.2"
 	}
 }
